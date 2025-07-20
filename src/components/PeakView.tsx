@@ -24,9 +24,9 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       setTransform(-dir/360 * width * scale - offset*scale,transformContext.transformState.positionY, scale, fast ? 5 : 300);
     }
   };
-  const writeOffset = (offset: number) => {
+  const writeOffset = (off: number) => {
     console.log(`writing offset ${offset}`);
-    setOffset(offset);
+    setOffset(offset + off);
   }
   useImperativeHandle(ref, () => ({
     zoomToDirection: (dir: number, fast: boolean=true) => {
