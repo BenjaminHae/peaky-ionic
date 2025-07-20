@@ -3,8 +3,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  height: 100%;
+  /*top: 50%;
+  transform: translateY(-50%);*/
 }
 
 #container strong {
@@ -21,4 +22,9 @@
 
 #container a {
   text-decoration: none;
+}
+
+.fullSize {
+  height: 100%;
+  width: 100%;
 }
