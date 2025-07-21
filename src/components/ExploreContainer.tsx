@@ -47,7 +47,7 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
   const peakViewRef = useRef<PeakViewRef | null>(null);
   const [orientationAllowed, setOrientationAllowed] = useState(false);
   const [direction,setDirection] = useState(0);
-  const [directionsDisabled,setDirectionsDisabled] = useState(true);
+  const [directionsDisabled,setDirectionsDisabled] = useState(0);
   const [positionX,setPositionX] = useState(0);
   const [offsetX,setOffsetX] = useState(0);
 
@@ -85,14 +85,16 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
   }
 
   const movingStart = (ref: ReactZoomPanPinchRef) => {
+    if (!directionsDisabled) {
+      setPositionX(transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale);
+    }
     setDirectionsDisabled(true);
-    setPositionX(transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale);
   }
 
   const movingEnd = (ref: ReactZoomPanPinchRef) => {
-    setDirectionsDisabled(false);
     const offset = positionX - transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale;
     peakViewRef.current?.writeOffset(offset);
+    setDirectionsDisabled(false);
   }
 
   return (
