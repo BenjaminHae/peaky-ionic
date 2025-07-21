@@ -84,16 +84,13 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
     setDirectionsDisabled(false);
   }
 
-  const panningStart = (ref: ReactZoomPanPinchRef) => {
+  const movingStart = (ref: ReactZoomPanPinchRef) => {
     setDirectionsDisabled(true);
-    console.log(transformComponentRef.current);
-    console.log(` Panning start x: ${transformComponentRef.current?.instance.transformState.positionX} scale: ${transformComponentRef.current?.instance.transformState.scale}`);
     setPositionX(transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale);
   }
 
-  const panningEnd = (ref: ReactZoomPanPinchRef) => {
+  const movingEnd = (ref: ReactZoomPanPinchRef) => {
     setDirectionsDisabled(false);
-    console.log(` Panning end x: ${transformComponentRef.current?.instance.transformState.positionX} scale: ${transformComponentRef.current?.instance.transformState.scale}`);
     const offset = positionX - transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale;
     peakViewRef.current?.writeOffset(offset);
   }
@@ -112,10 +109,10 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
           initialScale={2} 
           ref={transformComponentRef} 
           className="fullSize"
-          onPanningStart={panningStart} 
-          onPinchingStart={()=>{setDirectionsDisabled(true)}}
-          onPanningStop={panningEnd} 
-          onPinchingStop={()=>{setDirectionsDisabled(false)}}>
+          onPanningStart={movingStart} 
+          onPinchingStart={movingStart}
+          onPanningStop={movingEnd} 
+          onPinchingStop={movingEnd}>
         <PeakView transformer={transformComponentRef} ref={peakViewRef} />
       </TransformWrapper>
     </div>
