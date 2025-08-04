@@ -12,6 +12,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@benjaminhae/peaky": "^0.0.8",
     "@capacitor/android": "^7.4.2",
     "@capacitor/app": "7.0.1",
     "@capacitor/core": "7.4.2",
@@ -31,7 +32,7 @@
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "react-zoom-pan-pinch": "^3.7.0",
-    "srtm-elevation-async": "^1.0.1"
+    "srtm-elevation-async": "^1.0.4"
   },
   "devDependencies": {
     "@capacitor/cli": "7.4.2",

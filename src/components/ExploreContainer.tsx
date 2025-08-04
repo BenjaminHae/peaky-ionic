@@ -99,14 +99,14 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
 
   return (
     <div id="container">
-      { !orientationAllowed && <strong><button onClick={requestPermission}>Allow Orientation access</button></strong> }
-      <p>
-        {direction.toFixed(0)}° { directionsDisabled &&  "Movement deactivated "} Move to 
-        <a onClick={()=>gotoDirection(0, false)}>North</a>, 
+      { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Orientation access</button></strong></p> }
+      <div id="direction">{direction.toFixed(0)}°</div>
+      {/*<p>
+        Move to <a onClick={()=>gotoDirection(0, false)}>North</a>, 
         <a onClick={()=>gotoDirection(90, false)}>East</a>, 
         <a onClick={()=>gotoDirection(180, false)}>South</a>, 
         <a onClick={()=>gotoDirection(270, false)}>West</a>
-      </p>
+      </p>*/}
       <TransformWrapper 
           initialScale={2} 
           ref={transformComponentRef} 
