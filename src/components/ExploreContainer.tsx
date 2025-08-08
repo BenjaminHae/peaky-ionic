@@ -2,8 +2,12 @@ import './ExploreContainer.css';
 import PeakView, {PeakViewRef} from './PeakView';
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, useTransformContext } from "react-zoom-pan-pinch";
 import { useRef, useState, useEffect, useCallback } from "react";
+import { GeoLocation } from '@benjaminhae/peaky';
+import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
 
-interface ContainerProps { }
+interface ContainerProps { 
+  location?: GeoLocation;
+}
 
 const compassHeading = (alpha, beta, gamma: number) => {
 
@@ -42,14 +46,16 @@ const compassHeading = (alpha, beta, gamma: number) => {
 }
 
 
-const ExploreContainer: React.FC<ContainerProps> = () => {
+const ExploreContainer: React.FC<ContainerProps> = (props:ContainerProps) => {
   const transformComponentRef = useRef<ReactZoomPanPinchRef | null>(null);
   const peakViewRef = useRef<PeakViewRef | null>(null);
   const [orientationAllowed, setOrientationAllowed] = useState(false);
-  const [direction,setDirection] = useState(0);
-  const [directionsDisabled,setDirectionsDisabled] = useState(0);
-  const [positionX,setPositionX] = useState(0);
-  const [offsetX,setOffsetX] = useState(0);
+  const [locationAllowed, setLocationAllowed] = useState(false);
+  const [direction, setDirection] = useState(0);
+  const [location, setLocation] = useState<GeoLocation|null>(null);
+  const [directionsDisabled, setDirectionsDisabled] = useState(0);
+  const [positionX, setPositionX] = useState(0);
+  const [offsetX, setOffsetX] = useState(0);
 
   const gotoDirection = (direction: number, fast: boolean = true) => {
     peakViewRef.current?.zoomToDirection(direction, fast);
@@ -79,9 +85,26 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
     } catch {
     }
   }
+  const requestLocationPermissions = async () => {
+    try {
+      const perm = await GeoLocationService.checkPermissions();
+      if (!perm.location || ! perm.coarseLocation) {
+        await GeoLocationService.requestPermissions('coarseLocation');
+      }
+      setLocationAllowed(true);
+      const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true});
+      setLocation(new GeoLocation(location.coords.latitude, location.coords.longitude));
+    } catch (e){
+      console.log(e);
+    }
+  }
+
   if (!orientationAllowed && !DeviceMotionEvent.hasOwnProperty('requestPermission')) {
     setOrientationAllowed(true);
     setDirectionsDisabled(false);
+  }
+  if (!locationAllowed) {
+    requestLocationPermissions()
   }
 
   const movingStart = (ref: ReactZoomPanPinchRef) => {
@@ -99,23 +122,25 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
 
   return (
     <div id="container">
-      { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Orientation access</button></strong></p> }
+      { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
       <div id="direction">{direction.toFixed(0)}°</div>
-      {/*<p>
+      <p>
         Move to <a onClick={()=>gotoDirection(0, false)}>North</a>, 
         <a onClick={()=>gotoDirection(90, false)}>East</a>, 
         <a onClick={()=>gotoDirection(180, false)}>South</a>, 
         <a onClick={()=>gotoDirection(270, false)}>West</a>
-      </p>*/}
+        { location && <span> {location.lat}, {location.lon}</span> }
+      </p>
       <TransformWrapper 
-          initialScale={2} 
+          initialScale={1} 
+          minScale={0.1}
           ref={transformComponentRef} 
           className="fullSize"
           onPanningStart={movingStart} 
           onPinchingStart={movingStart}
           onPanningStop={movingEnd} 
           onPinchingStop={movingEnd}>
-        <PeakView transformer={transformComponentRef} ref={peakViewRef} />
+        <PeakView transformer={transformComponentRef} ref={peakViewRef} location={location}/>
       </TransformWrapper>
     </div>
   );
