@@ -1,25 +1,35 @@
 import './PeakView.css';
 import { TransformComponent, ReactZoomPanPinchRef, useTransformContext } from "react-zoom-pan-pinch";
-import { forwardRef, useImperativeHandle, useState, useRef, useMemo } from 'react';
+import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useEffect } from 'react';
 import { PluginListenerHandle } from '@capacitor/core';
 import { Motion } from '@capacitor/motion';
 import Peaky, { GeoLocation } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
 
 interface ContainerProps { 
-  transformer: ReactZoomPanPinchRef
-  location?: GeoLocation
+  transformer: ReactZoomPanPinchRef;
+  location?: {coords: GeoLocation, elevation: number|null};
 }
 export interface PeakViewRef {
   zoomToDirection: (direction: number, fast?: boolean) => void;
   writeOffset: (offset: number) => void;
 };
 
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height
+  };
+}
+
 const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProps>((props, ref) => {
   const [width,setWidth] = useState(0);
   const [offset,setOffset] = useState(0);
   const [text, setText] = useState<array<string>>([]);
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef(null);
   const transformContext = useTransformContext();
   const zoomToDirection = (dir: number, fast: boolean=true) => {
     if (props.transformer.current) {
@@ -41,6 +51,15 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       writeOffset(offset);
     }
   }));
+  // get screen size
+  useEffect(() => {
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const getPeaks = async () => {
     if (!props.location || ! canvasRef.current) {
@@ -58,7 +77,10 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
     }
     //const gl = new GeoLocation(location[0], location[1]);
-    const gl = props.location;
+    const gl = props.location.coords;
+    if (props.location.elevation) {
+      options.elevation = props.location.elevation;
+    }
     write(`starting peak calculation`);
     const time = [performance.now()];
     const peaky = new Peaky(storage, gl, options);
@@ -78,11 +100,18 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     write(`calculating peaks took ${time[3]-time[2]}`);
     write(`found ${peaky.peaks.length} peaks`);
     if (canvasRef.current) {
-      canvasRef.current.height = max_projected_height - min_projected_height + 800;//200 is magic border constant
-      canvasRef.current.width = peaky.options.circle_precision * 10;
+      const canHeight = max_projected_height - min_projected_height + 800;//200 is magic border constant
+      const canWidth = peaky.options.circle_precision * 10;
+      canvasRef.current.height = canHeight;
+      canvasRef.current.width = canWidth;
       peaky.drawView(canvasRef.current);
-      console.log(`setting width to ${canvasRef.current.offsetWidth}`);
-      const scale = 0.1;
+      let scale = 0.1;
+      if (containerRef.current) {
+        scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
+        console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
+        //scale *= 1 / transformContext.transformState.scale;
+      }
+      console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
       setWidth(canvasRef.current.offsetWidth * scale);
       canvasRef.current.style.transformOrigin = '0 0';
       //todo: Scale to actual size of frame
@@ -96,7 +125,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
 
   return (
         <TransformComponent>
-          <div className="fullSize">
+          <div className="fullSize" ref={containerRef}>
             <canvas ref={canvasRef} />
           </div>
         </TransformComponent>

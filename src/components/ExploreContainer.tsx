@@ -52,7 +52,7 @@ const ExploreContainer: React.FC<ContainerProps> = (props:ContainerProps) => {
   const [orientationAllowed, setOrientationAllowed] = useState(false);
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [direction, setDirection] = useState(0);
-  const [location, setLocation] = useState<GeoLocation|null>(null);
+  const [location, setLocation] = useState<{coords: GeoLocation, elevation: number|null}|null>(null);
   const [directionsDisabled, setDirectionsDisabled] = useState(0);
   const [positionX, setPositionX] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
@@ -93,7 +93,7 @@ const ExploreContainer: React.FC<ContainerProps> = (props:ContainerProps) => {
       }
       setLocationAllowed(true);
       const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true});
-      setLocation(new GeoLocation(location.coords.latitude, location.coords.longitude));
+      setLocation({coords: new GeoLocation(location.coords.latitude, location.coords.longitude), elevation: location.coords.altitude});
     } catch (e){
       console.log(e);
     }
@@ -129,7 +129,7 @@ const ExploreContainer: React.FC<ContainerProps> = (props:ContainerProps) => {
         <a onClick={()=>gotoDirection(90, false)}>East</a>, 
         <a onClick={()=>gotoDirection(180, false)}>South</a>, 
         <a onClick={()=>gotoDirection(270, false)}>West</a>
-        { location && <span> {location.lat}, {location.lon}</span> }
+        { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && location.elevation }</span> }
       </p>
       <TransformWrapper 
           initialScale={1} 
