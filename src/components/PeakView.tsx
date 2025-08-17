@@ -65,57 +65,62 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     if (!props.location || ! canvasRef.current) {
       return;
     }
-    const write = (outtext:string) => {
+    const write_message = (outtext:string) => {
       console.log(outtext);
       setText((s:Array<string>)=> [...s, outtext]);
     }
-    //const location = [ 47.020156, 9.978416 ];
-    const location = [ 49.227165, 9.1487209];// BW
-    const storage = new SrtmStorage();
-    const options = { };
-    if (Capacitor.getPlatform() == 'web') {
-      options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
-    }
-    //const gl = new GeoLocation(location[0], location[1]);
-    const gl = props.location.coords;
-    if (props.location.elevation) {
-      options.elevation = props.location.elevation;
-    }
-    write(`starting peak calculation`);
-    const time = [performance.now()];
-    const peaky = new Peaky(storage, gl, options);
-    await peaky.init();
-    time.push(performance.now());
-    write(`init took ${time[1]-time[0]}`);
-    await peaky.calculateRidges();
-    time.push(performance.now());
-    write(`calculating ridges took ${time[2]-time[1]}`);
-    const { min_projected_height, max_projected_height, min_height, max_height } = peaky.getDimensions();
-  
-    write(`current elevation is ${peaky.view?.elevation}`);
-    write(`found elevations from ${min_height} to ${max_height}, and ${peaky.view?.ridges.length} ridges`);
-  
-    await peaky.findPeaks();
-    time.push(performance.now());
-    write(`calculating peaks took ${time[3]-time[2]}`);
-    write(`found ${peaky.peaks.length} peaks`);
-    if (canvasRef.current) {
-      const canHeight = max_projected_height - min_projected_height + 800;//200 is magic border constant
-      const canWidth = peaky.options.circle_precision * 10;
-      canvasRef.current.height = canHeight;
-      canvasRef.current.width = canWidth;
-      peaky.drawView(canvasRef.current);
-      let scale = 0.1;
-      if (containerRef.current) {
-        scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
-        console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
-        //scale *= 1 / transformContext.transformState.scale;
+    try {
+      //const location = [ 47.020156, 9.978416 ];
+      const location = [ 49.227165, 9.1487209];// BW
+      const storage = new SrtmStorage();
+      const options = { };
+      let gl = props.location.coords;
+      if (Capacitor.getPlatform() == 'web') {
+        options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
+        const gl = new GeoLocation(location[0], location[1]);
       }
-      console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
-      setWidth(canvasRef.current.offsetWidth * scale);
-      canvasRef.current.style.transformOrigin = '0 0';
-      //todo: Scale to actual size of frame
-      canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
+      else {
+        if (props.location.elevation) {
+          options.elevation = props.location.elevation;
+        }
+      }
+      write_message(`starting peak calculation`);
+      const time = [performance.now()];
+      const peaky = new Peaky(storage, gl, options);
+      await peaky.init();
+      time.push(performance.now());
+      write_message(`init took ${time[1]-time[0]}`);
+      await peaky.calculateRidges();
+      time.push(performance.now());
+      write_message(`calculating ridges took ${time[2]-time[1]}`);
+      const { min_projected_height, max_projected_height, min_height, max_height } = peaky.getDimensions();
+  
+      write_message(`current elevation is ${peaky.view?.elevation}`);
+      write_message(`found elevations from ${min_height} to ${max_height}, and ${peaky.view?.ridges.length} ridges`);
+  
+      await peaky.findPeaks();
+      time.push(performance.now());
+      write_message(`calculating peaks took ${time[3]-time[2]}`);
+      write_message(`found ${peaky.peaks.length} peaks`);
+      if (canvasRef.current) {
+        const canHeight = max_projected_height - min_projected_height + 800;//200 is magic border constant
+        const canWidth = peaky.options.circle_precision;
+        canvasRef.current.height = canHeight;
+        canvasRef.current.width = canWidth;
+        peaky.drawView(canvasRef.current);
+        let scale = 0.1;
+        if (containerRef.current) {
+          scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
+          console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
+          //scale *= 1 / transformContext.transformState.scale;
+        }
+        console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
+        setWidth(canvasRef.current.offsetWidth * scale);
+        canvasRef.current.style.transformOrigin = '0 0';
+        canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
+      }
+    } catch(e) {
+      write_message(e.toString());
     }
   }
   useMemo(()=>getPeaks(), [canvasRef, props.location]);

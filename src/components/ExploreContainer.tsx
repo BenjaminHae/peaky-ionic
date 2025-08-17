@@ -129,11 +129,12 @@ const ExploreContainer: React.FC<ContainerProps> = (props:ContainerProps) => {
         <a onClick={()=>gotoDirection(90, false)}>East</a>, 
         <a onClick={()=>gotoDirection(180, false)}>South</a>, 
         <a onClick={()=>gotoDirection(270, false)}>West</a>
-        { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && location.elevation }</span> }
+        { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
       </p>
       <TransformWrapper 
           initialScale={1} 
           minScale={0.1}
+          maxScale={20}
           ref={transformComponentRef} 
           className="fullSize"
           onPanningStart={movingStart} 
