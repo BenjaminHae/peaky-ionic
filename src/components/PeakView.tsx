@@ -102,12 +102,13 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       time.push(performance.now());
       write_message(`calculating peaks took ${time[3]-time[2]}`);
       write_message(`found ${peaky.peaks.length} peaks`);
+
       if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height + 800;//200 is magic border constant
-        const canWidth = peaky.options.circle_precision;
+        const canHeight = max_projected_height - min_projected_height// + 800;//800 is magic border constant
+        const canWidth = peaky.options.circle_precision * 2;
         canvasRef.current.height = canHeight;
         canvasRef.current.width = canWidth;
-        peaky.drawView(canvasRef.current);
+        peaky.drawView(canvasRef.current, false);
         let scale = 0.1;
         if (containerRef.current) {
           scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
@@ -118,7 +119,10 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         setWidth(canvasRef.current.offsetWidth * scale);
         canvasRef.current.style.transformOrigin = '0 0';
         canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
+        time.push(performance.now());
+        write_message(`drawing took ${time[4]-time[3]}`);
       }
+      // todo: draw peaks as divs
     } catch(e) {
       write_message(e.toString());
     }
