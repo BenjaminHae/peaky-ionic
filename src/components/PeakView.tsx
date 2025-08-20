@@ -1,10 +1,13 @@
 import './PeakView.css';
-import { TransformComponent, ReactZoomPanPinchRef, useTransformContext } from "react-zoom-pan-pinch";
+import { TransformComponent, ReactZoomPanPinchRef, useTransformContext, KeepScale } from "react-zoom-pan-pinch";
 import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useEffect } from 'react';
 import { PluginListenerHandle } from '@capacitor/core';
 import { Motion } from '@capacitor/motion';
 import Peaky, { GeoLocation } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
+import PeakLabel from './PeakLabel';
+
+const MAGIC_CIRCLE_SCALE = 2;
 
 interface ContainerProps { 
   transformer: ReactZoomPanPinchRef;
@@ -24,10 +27,12 @@ function getWindowDimensions() {
 }
 
 const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProps>((props, ref) => {
-  const [width,setWidth] = useState(0);
-  const [offset,setOffset] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [canvasScale, setCanvasScale] = useState(1);
+  const [offset, setOffset] = useState(0);
   const [text, setText] = useState<array<string>>([]);
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+  const [peaks, setPeaks] = useState([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef(null);
   const transformContext = useTransformContext();
@@ -36,7 +41,13 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       const { setTransform } = props.transformer.current;
       const scale = transformContext.transformState.scale;
       console.log(`zooming with offset ${offset}`);
-      setTransform(-dir/360 * width * scale - offset*scale,transformContext.transformState.positionY, scale, fast ? 5 : 300);
+      let newPositionX = -dir/360 * width - offset 
+      if (newPositionX < 0) {
+        newPositionX += width;
+      } else if (newPositionX > width) {
+        newPositionX -= width;
+      }
+      setTransform(newPositionX * scale, transformContext.transformState.positionY, scale, fast ? 5 : 300);
     }
   };
   const writeOffset = (off: number) => {
@@ -70,14 +81,14 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       setText((s:Array<string>)=> [...s, outtext]);
     }
     try {
-      //const location = [ 47.020156, 9.978416 ];
-      const location = [ 49.227165, 9.1487209];// BW
+      const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
+      //const location = [ 49.227165, 9.1487209];// BW
       const storage = new SrtmStorage();
       const options = { };
       let gl = props.location.coords;
       if (Capacitor.getPlatform() == 'web') {
         options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
-        const gl = new GeoLocation(location[0], location[1]);
+        gl = new GeoLocation(location[0], location[1]);
       }
       else {
         if (props.location.elevation) {
@@ -104,11 +115,11 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       write_message(`found ${peaky.peaks.length} peaks`);
 
       if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height// + 800;//800 is magic border constant
-        const canWidth = peaky.options.circle_precision * 2;
+        const canHeight = max_projected_height - min_projected_height + 800;//800 is magic border constant, für Gipfel
+        const canWidth = peaky.options.circle_precision * MAGIC_CIRCLE_SCALE;
         canvasRef.current.height = canHeight;
         canvasRef.current.width = canWidth;
-        peaky.drawView(canvasRef.current, false);
+        peaky.drawView(canvasRef.current, true); // true schreibt die Gipfel
         let scale = 0.1;
         if (containerRef.current) {
           scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
@@ -117,12 +128,13 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         }
         console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
         setWidth(canvasRef.current.offsetWidth * scale);
-        canvasRef.current.style.transformOrigin = '0 0';
-        canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
+        setCanvasScale(scale);
+        //canvasRef.current.style.transformOrigin = '0 0';
+        //canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
         time.push(performance.now());
         write_message(`drawing took ${time[4]-time[3]}`);
       }
-      // todo: draw peaks as divs
+      setPeaks(peaky.peaks);
     } catch(e) {
       write_message(e.toString());
     }
@@ -131,11 +143,15 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const textItems = text.map((line) => 
     <p>{line}</p>
   );
+  const peakItems = peaks.map((peak, index) => <PeakLabel key={`peak-${index}`} left={peak.direction *MAGIC_CIRCLE_SCALE} name={peak.name} elevation={peak.elevation.toFixed(0)}/>);
 
   return (
         <TransformComponent>
           <div className="fullSize" ref={containerRef}>
-            <canvas ref={canvasRef} />
+            <div style={{transformOrigin: '0 0', transform:"scale("+canvasScale.toFixed(2)+")", position: "relative"}}>
+              {peakItems}
+              <canvas className="canvas" ref={canvasRef} />
+            </div>
           </div>
         </TransformComponent>
   );

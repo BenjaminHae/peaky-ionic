@@ -1,0 +1,13 @@
+.peakLabel {
+  font: 60px serif;
+  text-align: left;
+  rotate: -60deg;
+  background-color: white;
+}
+.peakStroke {
+  border-left: 3px solid black;
+  height: 80px;
+}
+.labelContainer {
+  position: absolute;
+}
