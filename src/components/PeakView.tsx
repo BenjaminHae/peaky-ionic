@@ -3,7 +3,7 @@ import { TransformComponent, ReactZoomPanPinchRef, useTransformContext, KeepScal
 import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useEffect } from 'react';
 import { PluginListenerHandle } from '@capacitor/core';
 import { Motion } from '@capacitor/motion';
-import Peaky, { GeoLocation } from '@benjaminhae/peaky';
+import Peaky, { GeoLocation, projected_height } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
 import PeakLabel from './PeakLabel';
 
@@ -115,11 +115,11 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       write_message(`found ${peaky.peaks.length} peaks`);
 
       if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height + 800;//800 is magic border constant, für Gipfel
+        const canHeight = max_projected_height - min_projected_height;// + 800;//800 is magic border constant, für Gipfel
         const canWidth = peaky.options.circle_precision * MAGIC_CIRCLE_SCALE;
         canvasRef.current.height = canHeight;
         canvasRef.current.width = canWidth;
-        peaky.drawView(canvasRef.current, true); // true schreibt die Gipfel
+        peaky.drawView(canvasRef.current, false); // true schreibt die Gipfel
         let scale = 0.1;
         if (containerRef.current) {
           scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
@@ -143,7 +143,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const textItems = text.map((line) => 
     <p>{line}</p>
   );
-  const peakItems = peaks.map((peak, index) => <PeakLabel key={`peak-${index}`} left={peak.direction *MAGIC_CIRCLE_SCALE} name={peak.name} elevation={peak.elevation.toFixed(0)}/>);
+// todo: get elevation even if not present in location.elevation
+  const peakItems = peaks.map((peak, index) => <div className="PeakContainer" key={`peak-${index}`} style={{left: peak.direction *MAGIC_CIRCLE_SCALE, bottom: projected_height(props.location.elevation, peak.distance, peak.elevation, 0)}}><KeepScale><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale></div>);
 
   return (
         <TransformComponent>

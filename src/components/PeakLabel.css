@@ -1,13 +1,14 @@
 .peakLabel {
   font: 60px serif;
   text-align: left;
-  rotate: -60deg;
+  transform-origin: top left;
+  transform: rotate(-60deg) translate(+0.2em, -1.0em);
   background-color: white;
+  white-space: nowrap;
+  overflow-x: visible;
 }
 .peakStroke {
   border-left: 3px solid black;
   height: 80px;
-}
-.labelContainer {
-  position: absolute;
+  width: 0px;
 }

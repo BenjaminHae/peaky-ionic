@@ -11,3 +11,6 @@
 .canvas {
   /*margin-top: 800px;*/
 }
+.PeakContainer {
+  position: absolute;
+}
