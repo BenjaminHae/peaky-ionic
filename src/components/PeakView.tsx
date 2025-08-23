@@ -33,6 +33,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const [text, setText] = useState<array<string>>([]);
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
   const [peaks, setPeaks] = useState([]);
+  const [elevation, setElevation] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef(null);
   const transformContext = useTransformContext();
@@ -115,7 +116,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       write_message(`found ${peaky.peaks.length} peaks`);
 
       if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height;// + 800;//800 is magic border constant, für Gipfel
+        const canHeight = max_projected_height - min_projected_height + 800;//800 is magic border constant, für Gipfel
         const canWidth = peaky.options.circle_precision * MAGIC_CIRCLE_SCALE;
         canvasRef.current.height = canHeight;
         canvasRef.current.width = canWidth;
@@ -134,6 +135,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         time.push(performance.now());
         write_message(`drawing took ${time[4]-time[3]}`);
       }
+      const newCentralElevation = peaky.view.elevation;
+      setElevation(newCentralElevation);
       setPeaks(peaky.peaks);
     } catch(e) {
       write_message(e.toString());
@@ -144,7 +147,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     <p>{line}</p>
   );
 // todo: get elevation even if not present in location.elevation
-  const peakItems = peaks.map((peak, index) => <div className="PeakContainer" key={`peak-${index}`} style={{left: peak.direction *MAGIC_CIRCLE_SCALE, bottom: projected_height(props.location.elevation, peak.distance, peak.elevation, 0)}}><KeepScale><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale></div>);
+  const peakItems = peaks.map((peak, index) => <div className="PeakContainer" key={`peak-${index}`} style={{left: peak.direction *MAGIC_CIRCLE_SCALE, bottom: projected_height(elevation, peak.distance, peak.elevation, 0), transform:`scale(${(1/canvasScale).toFixed(2)})`, transformOrigin:"bottom left"}}><KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale></div>);
 
   return (
         <TransformComponent>
