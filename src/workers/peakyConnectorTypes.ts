@@ -10,6 +10,10 @@ interface PeakyWorkerMessageDraw {
   canvas: OffscreenCanvas;
 }
 
+interface PeakyWorkerMessagePeaks {
+  action: "peaks";
+}
+
 export interface Dimensions { 
   min_projected_height, 
   max_projected_height, 

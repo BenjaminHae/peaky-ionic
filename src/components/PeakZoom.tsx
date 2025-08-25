@@ -9,7 +9,7 @@ import { Dimensions } from '../workers/peakyConnectorTypes';
 
 interface PeakZoomProps {
   dimensions: Dimensions;
-  canvasDrawer: (canvas: HTMLCanvasElement) => void;
+  canvasDrawer: (canvas: OffscreenCanvas) => void;
   peaks: Array<PeakWithElevation>;
 }
 

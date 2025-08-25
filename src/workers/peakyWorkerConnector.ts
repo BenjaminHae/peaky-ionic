@@ -58,9 +58,8 @@ export default class PeakyWorkerConnector {
     })
   }
 
-  drawToCanvas(canvas: HTMLCanvasElement) {
+  drawToCanvas(offscreen: OffscreenCanvas) {
     try {
-      const offscreen = canvas.transferControlToOffscreen();
       this.worker.postMessage({action: "draw", canvas: offscreen}, [offscreen]);
     } catch(e) {
       console.log(e);
@@ -71,6 +70,7 @@ export default class PeakyWorkerConnector {
     if (this.hasPeaks) {
       return Promise.resolve(this.peaks);
     }
+    this.worker.postMessage({action: "peaks"});
     return new Promise<Array<PeakWithDistance>>((resolve) => {
       this.peakWaiter.push(resolve);
     })

@@ -12,7 +12,7 @@ const MAGIC_CIRCLE_SCALE = 2;
 interface ContainerProps { 
   transformer: ReactZoomPanPinchRef;
   location?: {coords: GeoLocation, elevation: number|null};
-  canvasDrawer: (canvas: HTMLCanvasElement) => void;
+  canvasDrawer: (canvas: OffscreenCanvas) => void;
   peaks: Array<PeakWithElevation>;
 }
 export interface PeakViewRef {
@@ -35,6 +35,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const [text, setText] = useState<array<string>>([]);
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [offscreen, setOffscreen] = useState<OffscreenCanvas|undefined>(undefined);
   const containerRef = useRef(null);
   const transformContext = useTransformContext();
   const zoomToDirection = (dir: number, fast: boolean=true) => {
@@ -76,9 +77,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const peakItems = useMemo(()=>
     props.peaks.map(
      (peak, index) => 
-     {
-       console.log(`left: ${peak.direction * MAGIC_CIRCLE_SCALE}, bottom: ${projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0)}`);
-       return (<div 
+       <div 
          className="PeakContainer" 
          key={`peak-${index}`} 
          style={{
@@ -88,15 +87,23 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
            transformOrigin:"bottom left"
          }}>
          <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
-       </div>)
-     }), [props.peaks, props.dimensions]);
+       </div>
+     ), [props.peaks, props.dimensions]);
 
   const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height + 800;//800 is magic border constant, für Gipfel
   const canWidth = props.dimensions.circle_precision * MAGIC_CIRCLE_SCALE;
 
   useEffect(()=> {
-    if (canvasRef.current) {
-      props.canvasDrawer(canvasRef.current);
+    if(canvasRef.current) {
+      try {
+        setOffscreen(canvasRef.current.transferControlToOffscreen());
+      } catch {
+      }
+    }
+  }, [canvasRef]);
+  useEffect(()=> {
+    if (canvasRef.current && offscreen) {
+      props.canvasDrawer(offscreen);
       let scale = 0.1;
       if (containerRef.current) {
         scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight);
@@ -106,7 +113,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       setWidth(canvasRef.current.offsetWidth * scale);
       setCanvasScale(scale);
     }
-  }, [props.canvasDrawer, canvasRef, props.dimensions]);
+  }, [props.canvasDrawer, offscreen, props.dimensions]);
 
   return (
         <TransformComponent>

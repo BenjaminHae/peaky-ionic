@@ -26,7 +26,7 @@ const drawToCanvas = (canvas: OffscreenCanvas) => {
   handleCanvasWaiter();
 }
 
-const doCalculation = async (location: GeoLocation, options: PeakyOptions) => {
+const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) => {
   location = new GeoLocation(location.lat, location.lon);
   console.log(location);
   console.log(options);
@@ -45,11 +45,14 @@ const doCalculation = async (location: GeoLocation, options: PeakyOptions) => {
   write_message(`calculating ridges took ${time[2]-time[1]}`);
   handleCanvasWaiter();
 
-  // todo: ggf. das hier explizit triggern, damit dazwischen ein draw passieren kann
+}
+
+const doPeaksCalculation = async () => {
+  const time = [performance.now()];
   await peaky.findPeaks();
   self.postMessage({action: "peaks", peaks: peaky.peaks});
   time.push(performance.now());
-  write_message(`calculating peaks took ${time[3]-time[2]}`);
+  write_message(`calculating peaks took ${time[1]-time[0]}`);
   write_message(`found ${peaky.peaks.length} peaks`);
 }
 
@@ -58,9 +61,12 @@ self.onmessage = (data: MessageEvent<any>) => {
     console.log('Worker received:')
     console.log(data.data)
     if (data.data.action === "init") {
-      doCalculation(data.data.data.location, data.data.data.options);
+      doRidgeCalculation(data.data.data.location, data.data.data.options);
     }
-    if (data.data.action === "draw") {
+    else if (data.data.action === "peaks") {
+      doPeaksCalculation();
+    }
+    else if (data.data.action === "draw") {
       drawToCanvas(data.data.canvas);
     }
 };

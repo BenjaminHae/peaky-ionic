@@ -33,7 +33,7 @@ const Peaks: React.FC = () => {
      callInit();
   }, [peakyWorker, location]);
 
-  const callCanvasDrawer = (canvas: HTMLCanvasElement) => {
+  const callCanvasDrawer = (canvas: OffscreenCanvas) => {
     peakyWorker.drawToCanvas(canvas);
   }
 
