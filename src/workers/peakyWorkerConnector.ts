@@ -1,33 +1,33 @@
 import Peaky, { GeoLocation, projected_height, PeakWithDistance } from '@benjaminhae/peaky';
-import { PeakyWorkerResponse } from './peakyConnectorTypes';
+import { PeakyWorkerResponse, Dimensions } from './peakyConnectorTypes';
 
+//todo: send elevation
 export default class PeakyWorkerConnector {
   worker: Worker;
-  peaky?: Peaky;
-  canvasWaiter: Array<(p: Peaky) => void > = [];
   peakWaiter: Array<(peaks: Array<PeakWithDistance>) => void> = [];
-  
-  hasPeaks = false;
+  ridgeWaiter: Array<(dim: Dimensions) => void> = [];
+  dimensions?: Dimensions;
+  peaks?: Array<PeakWithDistance>;
   
   constructor() {
-    this.worker = new Worker(new URL('./peaky.ts', import.meta.url));
+    this.worker = new Worker(new URL('./peaky.ts', import.meta.url), {
+      type: 'module'
+    });
+    console.log(this.worker);
     this.worker.onmessage = (data) => this.messageHandler(data);
+    this.worker.onerror = (err) => console.log(err);
   }
-  messageHandler({data: { data: PeakyWorkerResponse }}) {
+  messageHandler(parms/*{data: { data: PeakyWorkerResponse }}*/) {
+    console.log(parms);
+    const data = parms.data;
     if (data.action == "ridges") {
-      this.peaky = data.peaky;
-      this.callCanvasWaiter(this.peaky);
+      this.dimensions = data.dimensions;
+      this.callRidgeWaiter(this.dimensios);
     }
     else if (data.action == "peaks") {
-      this.peaky = data.peaky;
+      this.peaks = data.peaks;
       this.hasPeaks = true;
-      this.callPeaksWaiter(this.peaky.peaks);
-    }
-  }
-
-  callCanvasWaiter(peaky: Peaky) {
-    while (this.canvasWaiter.length > 0 ) {
-      this.canvasWaiter.pop()(peaky);
+      this.callPeaksWaiter(this.peaks);
     }
   }
 
@@ -37,27 +37,41 @@ export default class PeakyWorkerConnector {
     }
   }
 
-  getCanvasDrawer(): Promise<Peaky> {
-    if (this.peaky) {
-      return Promise.resolve(this.peaky);
+  callRidgeWaiter(dimensions: Dimensions) {
+    while (this.ridgeWaiter.length > 0 ) {
+      this.ridgeWaiter.pop()(dimensions);
     }
-    return new Promise<Peaky>((resolve) => {
-      this.peakWaiter.push(resolve);
+  }
+
+  // call with elevation as option
+  init(location: GeoLocation, options: PeakyOptions = {}) {
+    console.log("init worker");
+    this.worker.postMessage({action: "init", data: {location: location, options: options}});
+  }
+
+  getDimensions() {
+    if (this.dimensions) {
+      return Promise.resolve(this.dimensions);
+    }
+    return new Promise<Dimensions>((resolve) => {
+      this.callRidgeWaiter.push(resolve);
     })
   }
 
+  drawToCanvas(canvas: HTMLCanvasElement) {
+    const offscreen = canvas.transferControlToOffscreen();
+    this.worker.postMessage({action: "draw", canvas: offscreen}, [offscreen]);
+  }
+
   getPeaks(): Promise<Array<PeakWithDistance>> {
-    if (this.hasPeaks && this.peaky) {
-      return Promise.resolve(this.peaky.peaks);
+    if (this.hasPeaks) {
+      return Promise.resolve(this.peaks);
     }
     return new Promise<Array<PeakWithDistance>>((resolve) => {
       this.callPeaksWaiter.push(resolve);
     })
   }
 
-  init(location: GeoLocation, options: PeakyOptions = {}) {
-    this.worker.postMessage({action: "init", data: {location: location, options: options}});
-  }
 }/*{
       const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
       //const location = [ 49.227165, 9.1487209];// BW

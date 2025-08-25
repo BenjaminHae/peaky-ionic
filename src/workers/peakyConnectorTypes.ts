@@ -1,18 +1,30 @@
-import Peaky, { GeoLocation } from '@benjaminhae/peaky';
+
 
 interface PeakyWorkerMessageInit {
   action: "init";
   data: {location: GeoLocation, options: PeakyOptions};
 }
 
+interface PeakyWorkerMessageDraw {
+  action: "draw";
+  canvas: OffscreenCanvas;
+}
+
+export interface Dimensions { 
+  min_projected_height, 
+  max_projected_height, 
+  min_height, 
+  max_height, 
+  circle_precision: number 
+}
 interface PeakyWorkerResponseRidges {
   action: "ridges";
-  peaky: Peaky;
+  dimensions: Dimensions;
 }
 
 interface PeakyWorkerResponsePeaks {
   action: "peaks";
-  peaky: Peaky;
+  peaks: Array<PeakWithElevation>;
 }
 
 interface PeakyWorkerResponseStatus {
