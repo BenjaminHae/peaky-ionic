@@ -22,7 +22,7 @@ export default class PeakyWorkerConnector {
     const data = parms.data;
     if (data.action == "ridges") {
       this.dimensions = data.dimensions;
-      this.callRidgeWaiter(this.dimensios);
+      this.callRidgeWaiter(this.dimensions);
     }
     else if (data.action == "peaks") {
       this.peaks = data.peaks;
@@ -54,13 +54,17 @@ export default class PeakyWorkerConnector {
       return Promise.resolve(this.dimensions);
     }
     return new Promise<Dimensions>((resolve) => {
-      this.callRidgeWaiter.push(resolve);
+      this.ridgeWaiter.push(resolve);
     })
   }
 
   drawToCanvas(canvas: HTMLCanvasElement) {
-    const offscreen = canvas.transferControlToOffscreen();
-    this.worker.postMessage({action: "draw", canvas: offscreen}, [offscreen]);
+    try {
+      const offscreen = canvas.transferControlToOffscreen();
+      this.worker.postMessage({action: "draw", canvas: offscreen}, [offscreen]);
+    } catch(e) {
+      console.log(e);
+    }
   }
 
   getPeaks(): Promise<Array<PeakWithDistance>> {
@@ -68,7 +72,7 @@ export default class PeakyWorkerConnector {
       return Promise.resolve(this.peaks);
     }
     return new Promise<Array<PeakWithDistance>>((resolve) => {
-      this.callPeaksWaiter.push(resolve);
+      this.peakWaiter.push(resolve);
     })
   }
 

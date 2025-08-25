@@ -16,6 +16,7 @@ export interface Dimensions {
   min_height, 
   max_height, 
   circle_precision: number 
+  central_elevation: number;
 }
 interface PeakyWorkerResponseRidges {
   action: "ridges";

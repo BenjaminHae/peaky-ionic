@@ -38,7 +38,9 @@ const doCalculation = async (location: GeoLocation, options: PeakyOptions) => {
   write_message(`init took ${time[1]-time[0]}`);
   await peaky.calculateRidges();
   ridgesPresent = true;
-  self.postMessage({ action: "ridges", dimensions: peaky.getDimensions() });
+  const dimensions = peaky.getDimensions();
+  dimensions.central_elevation = peaky.view.elevation;
+  self.postMessage({ action: "ridges", dimensions: dimensions });
   time.push(performance.now());
   write_message(`calculating ridges took ${time[2]-time[1]}`);
   handleCanvasWaiter();

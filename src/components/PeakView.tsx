@@ -12,6 +12,8 @@ const MAGIC_CIRCLE_SCALE = 2;
 interface ContainerProps { 
   transformer: ReactZoomPanPinchRef;
   location?: {coords: GeoLocation, elevation: number|null};
+  canvasDrawer: (canvas: HTMLCanvasElement) => void;
+  peaks: Array<PeakWithElevation>;
 }
 export interface PeakViewRef {
   zoomToDirection: (direction: number, fast?: boolean) => void;
@@ -32,8 +34,6 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const [offset, setOffset] = useState(0);
   const [text, setText] = useState<array<string>>([]);
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
-  const [peaks, setPeaks] = useState([]);
-  const [elevation, setElevation] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef(null);
   const transformContext = useTransformContext();
@@ -73,88 +73,47 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const getPeaks = async () => {
-    if (!props.location || ! canvasRef.current) {
-      return;
-    }
-    const write_message = (outtext:string) => {
-      console.log(outtext);
-      setText((s:Array<string>)=> [...s, outtext]);
-    }
-    try {
-      const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
-      //const location = [ 49.227165, 9.1487209];// BW
-      const storage = new SrtmStorage();
-      const options = { };
-      let gl = props.location.coords;
-      if (Capacitor.getPlatform() == 'web') {
-        options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
-        gl = new GeoLocation(location[0], location[1]);
-      }
-      else {
-        if (props.location.elevation) {
-          options.elevation = props.location.elevation;
-        }
-      }
-      write_message(`starting peak calculation`);
-      const time = [performance.now()];
-      const peaky = new Peaky(storage, gl, options);
-      await peaky.init();
-      time.push(performance.now());
-      write_message(`init took ${time[1]-time[0]}`);
-      await peaky.calculateRidges();
-      time.push(performance.now());
-      write_message(`calculating ridges took ${time[2]-time[1]}`);
-      const { min_projected_height, max_projected_height, min_height, max_height } = peaky.getDimensions();
-  
-      write_message(`current elevation is ${peaky.view?.elevation}`);
-      write_message(`found elevations from ${min_height} to ${max_height}, and ${peaky.view?.ridges.length} ridges`);
-  
-      await peaky.findPeaks();
-      time.push(performance.now());
-      write_message(`calculating peaks took ${time[3]-time[2]}`);
-      write_message(`found ${peaky.peaks.length} peaks`);
+  const peakItems = useMemo(()=>
+    props.peaks.map(
+     (peak, index) => 
+     {
+       console.log(`left: ${peak.direction * MAGIC_CIRCLE_SCALE}, bottom: ${projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0)}`);
+       return (<div 
+         className="PeakContainer" 
+         key={`peak-${index}`} 
+         style={{
+           left: peak.direction * MAGIC_CIRCLE_SCALE, 
+           bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0), 
+           transform:`scale(${(1/canvasScale).toFixed(2)})`, 
+           transformOrigin:"bottom left"
+         }}>
+         <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
+       </div>)
+     }), [props.peaks, props.dimensions]);
 
-      if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height + 800;//800 is magic border constant, für Gipfel
-        const canWidth = peaky.options.circle_precision * MAGIC_CIRCLE_SCALE;
-        canvasRef.current.height = canHeight;
-        canvasRef.current.width = canWidth;
-        peaky.drawView(canvasRef.current, false); // true schreibt die Gipfel
-        let scale = 0.1;
-        if (containerRef.current) {
-          scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
-          console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
-          //scale *= 1 / transformContext.transformState.scale;
-        }
-        console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
-        setWidth(canvasRef.current.offsetWidth * scale);
-        setCanvasScale(scale);
-        //canvasRef.current.style.transformOrigin = '0 0';
-        //canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
-        time.push(performance.now());
-        write_message(`drawing took ${time[4]-time[3]}`);
+  const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height + 800;//800 is magic border constant, für Gipfel
+  const canWidth = props.dimensions.circle_precision * MAGIC_CIRCLE_SCALE;
+
+  useEffect(()=> {
+    if (canvasRef.current) {
+      props.canvasDrawer(canvasRef.current);
+      let scale = 0.1;
+      if (containerRef.current) {
+        scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight);
+        console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
       }
-      const newCentralElevation = peaky.view.elevation;
-      setElevation(newCentralElevation);
-      setPeaks(peaky.peaks);
-    } catch(e) {
-      write_message(e.toString());
+      console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
+      setWidth(canvasRef.current.offsetWidth * scale);
+      setCanvasScale(scale);
     }
-  }
-  useMemo(()=>getPeaks(), [canvasRef, props.location]);
-  const textItems = text.map((line) => 
-    <p>{line}</p>
-  );
-// todo: get elevation even if not present in location.elevation
-  const peakItems = peaks.map((peak, index) => <div className="PeakContainer" key={`peak-${index}`} style={{left: peak.direction *MAGIC_CIRCLE_SCALE, bottom: projected_height(elevation, peak.distance, peak.elevation, 0), transform:`scale(${(1/canvasScale).toFixed(2)})`, transformOrigin:"bottom left"}}><KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale></div>);
+  }, [props.canvasDrawer, canvasRef, props.dimensions]);
 
   return (
         <TransformComponent>
           <div className="fullSize" ref={containerRef}>
             <div style={{transformOrigin: '0 0', transform:"scale("+canvasScale.toFixed(2)+")", position: "relative"}}>
               {peakItems}
-              <canvas className="canvas" ref={canvasRef} />
+              <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} />
             </div>
           </div>
         </TransformComponent>

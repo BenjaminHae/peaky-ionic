@@ -1,6 +1,7 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
-import TestContainer from '../components/TestContainer';
+//import TestContainer from '../components/TestContainer';
+import Peaks from '../components/Peaks';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -17,7 +18,7 @@ const Home: React.FC = () => {
             <IonTitle size="large">Peaky</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer />
+        <Peaks />
       </IonContent>
     </IonPage>
   );

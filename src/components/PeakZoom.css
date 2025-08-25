@@ -1,0 +1,12 @@
+#direction {
+  position: fixed;
+  top: 2em;
+  right: 0;
+  font-size: 2em;
+  z-index: 11;
+}
+
+.fullSize {
+  height: 100%;
+  width: 100%;
+}
