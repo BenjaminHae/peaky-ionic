@@ -4,7 +4,8 @@ import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
 import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
-import { Dimensions } from '../workers/peakyConnectorTypes';
+import { Dimensions, Status } from '../workers/peakyConnectorTypes';
+import Progress from './Progress';
 
 const Peaks: React.FC = () => {
   const [orientationAllowed, setOrientationAllowed] = useState(false);
@@ -12,6 +13,7 @@ const Peaks: React.FC = () => {
   const [location, setLocation] = useState<{coords: GeoLocation, elevation: number|null}|null>(null);
   const [dimensions, setDimensions] = useState<Dimensions|null>(null);
   const [peaks, setPeaks] = useState<Array<PeakWithElevation>>([]);
+  const [status, setStatus] = useState<Status>();
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
  
@@ -24,7 +26,8 @@ const Peaks: React.FC = () => {
            options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
          }
          options.elevation = location.elevation;
-         peakyWorker.init(location.coords, options);
+         peakyWorker.subscribeStatus((s) => setStatus(s));
+         await peakyWorker.init(location.coords, options);
          const _dimensions = await peakyWorker.getDimensions();
          setDimensions(_dimensions);
          setPeaks(await peakyWorker.getPeaks());
@@ -80,6 +83,9 @@ const Peaks: React.FC = () => {
   return (
     <div id="container">
       { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
+      { status && status.state_no < 5 &&
+        <Progress status={status}/>
+      }
       <p>
         { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
       </p>
