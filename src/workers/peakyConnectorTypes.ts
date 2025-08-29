@@ -1,5 +1,4 @@
 
-
 interface PeakyWorkerMessageInit {
   action: "init";
   data: {location: GeoLocation, options: PeakyOptions};
@@ -12,6 +11,13 @@ interface PeakyWorkerMessageDraw {
 
 interface PeakyWorkerMessagePeaks {
   action: "peaks";
+}
+
+interface PeakyWorkerWantsFetchResponse {
+  action: "fetch";
+  id: string;
+  state: "resolve" | "reject";
+  result: any;
 }
 
 export interface Dimensions { 
@@ -32,8 +38,14 @@ interface PeakyWorkerResponsePeaks {
   peaks: Array<PeakWithElevation>;
 }
 
-interface PeakyWorkerResponseStatus {
-  action: "status";
+interface PeakyWorkerWantsFetch {
+  action: "fetch";
+  id: string;
+  args: Array<any>;
+}
+
+
+export interface Status {
   state: string;
   state_no: number;
   state_max: number;
@@ -42,5 +54,11 @@ interface PeakyWorkerResponseStatus {
   sub_max: number;
 }
 
+interface PeakyWorkerResponseStatus {
+  action: "status";
+  status: Status;
+}
+
+
 export type PeakyWorkerMessage = PeakyWorkerMessageInit;
-export type PeakyWorkerResponse = PeakyWorkerResponsePeaks | PeakyWorkerResponseRidges | PeakyWorkerResponseStatus;
+export type PeakyWorkerResponse = PeakyWorkerResponsePeaks | PeakyWorkerResponseRidges | PeakyWorkerResponseStatus | PeakyWorkerWantsFetch;

@@ -1,10 +1,26 @@
 import { PeakyWorkerMessage } from './peakyConnectorTypes';
-import Peaky, { GeoLocation, PeakyOptions } from '@benjaminhae/peaky';
+import Peaky, { GeoLocation, PeakyOptions, StatusMap } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
 
 const self = globalThis as unknown as DedicatedWorkerGlobalScope;
-const canvasWaiter: Array<OffscreenCanvas> = [];
 
+const fetchWaiter: { [id: string]: any } = {};
+
+self.fetch = new Proxy(self.fetch, {
+      apply: function (target, that, args) {
+        // args holds argument of fetch function
+        // Do whatever you want with fetch request
+        return new Promise<any>((resolve, reject) => {
+          const id = Math.random().toString(36).slice(2);
+          console.log(`sending fetch request ${id}`);
+          fetchWaiter[id] = [resolve, reject];
+          self.postMessage({ action: "fetch", id: id, args: [args[0]] });
+        });
+      },
+    });
+
+
+const canvasWaiter: Array<OffscreenCanvas> = [];
 let peaky: Peaky | undefined;
 let ridgesPresent = false;
 
@@ -16,14 +32,18 @@ const write_message= (msg) => {
 const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
     while (canvasWaiter.length > 0 ) {
-      const canvas = canvasWaiter.pop();
-      peaky.drawView(canvas, false); // true schreibt die Gipfel
+      peaky.drawView(canvasWaiter.pop(), false); // true schreibt die Gipfel
     }
   }
 }
 const drawToCanvas = (canvas: OffscreenCanvas) => {
   canvasWaiter.push(canvas);
   handleCanvasWaiter();
+}
+
+const statusListener = (status) => {
+  status.state = StatusMap[status.state_no];
+  self.postMessage({ action: "status", status: status });
 }
 
 const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) => {
@@ -33,6 +53,7 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   write_message(`starting peak calculation`);
   const time = [performance.now()];
   peaky = new Peaky(new SrtmStorage(), location, options);
+  peaky.subscribeStatus(statusListener);
   await peaky.init();
   time.push(performance.now());
   write_message(`init took ${time[1]-time[0]}`);
@@ -44,7 +65,6 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   time.push(performance.now());
   write_message(`calculating ridges took ${time[2]-time[1]}`);
   handleCanvasWaiter();
-
 }
 
 const doPeaksCalculation = async () => {
@@ -56,18 +76,41 @@ const doPeaksCalculation = async () => {
   write_message(`found ${peaky.peaks.length} peaks`);
 }
 
+class FakeResponseObject {
+  status: any;
+  ab: ArrayBuffer;
+  constructor (status: any, ab: ArrayBuffer) {
+    this.status = status;
+    this.ab = ab;
+  }
+  
+  blob(): Blob {
+    return new Blob([this.ab]);
+  }
+}
 
 self.onmessage = (data: MessageEvent<any>) => {
-    console.log('Worker received:')
-    console.log(data.data)
-    if (data.data.action === "init") {
-      doRidgeCalculation(data.data.data.location, data.data.data.options);
+  if (data.data.action === "init") {
+    doRidgeCalculation(data.data.data.location, data.data.data.options);
+  }
+  else if (data.data.action === "peaks") {
+    doPeaksCalculation();
+  }
+  else if (data.data.action === "draw") {
+    drawToCanvas(data.data.canvas);
+  }
+  else if (data.data.action === "fetch") {
+    const waiter = fetchWaiter[data.data.id];
+    console.log(`receive fetch response ${data.data.id}`);
+    if (data.data.state === "resolve") {
+      console.log(`receive fetch response ${data.data.id}, resolve`);
+      waiter[0](new FakeResponseObject(data.data.result.status, data.data.result.ab));
     }
-    else if (data.data.action === "peaks") {
-      doPeaksCalculation();
+    else if (data.data.state === "reject") {
+      console.log(`receive fetch response ${data.data.id}, reject`);
+      waiter[1](data.data.result);
     }
-    else if (data.data.action === "draw") {
-      drawToCanvas(data.data.canvas);
-    }
+
+  }
 };
 

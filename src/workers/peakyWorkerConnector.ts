@@ -1,11 +1,13 @@
 import Peaky, { GeoLocation, projected_height, PeakWithDistance } from '@benjaminhae/peaky';
-import { PeakyWorkerResponse, Dimensions } from './peakyConnectorTypes';
+import { PeakyWorkerResponse, Dimensions, Status } from './peakyConnectorTypes';
+import SrtmStorage from '../capacitor_srtm_storage';
 
 //todo: send elevation
 export default class PeakyWorkerConnector {
   worker: Worker;
   peakWaiter: Array<(peaks: Array<PeakWithDistance>) => void> = [];
   ridgeWaiter: Array<(dim: Dimensions) => void> = [];
+  statusListener: Array<(status: Status) => void> = [];
   dimensions?: Dimensions;
   peaks?: Array<PeakWithDistance>;
   
@@ -29,6 +31,32 @@ export default class PeakyWorkerConnector {
       this.hasPeaks = true;
       this.callPeaksWaiter(this.peaks);
     }
+    else if (data.action == "status") {
+      this.callStatusListener(data.status);
+    }
+    else if (data.action == "fetch") {
+      this.handleFetch(data.id, data.args);
+    }
+  }
+
+  handleFetch(id: string, args: Array<any>) {
+    fetch.apply(null, args)
+      .then(async (result)=> {
+        console.log("fetch successful");
+        console.log(result);
+        const response = { status: result.status, ab:await (await result.blob()).arrayBuffer() }
+        console.log(response);
+        this.worker.postMessage({action: "fetch", id: id, state: "resolve", result: response}, [response.ab]);
+      })
+      .catch((result)=> {
+        console.log("fetch unsuccessful");
+        console.log(result);
+        this.worker.postMessage({action: "fetch", id: id, state: "reject", result: result}, [result]);
+      })
+  }
+
+  callStatusListener(status: Status) {
+    this.statusListener.forEach((l) => new Promise<void>((r)=>{l(status); r()}));
   }
 
   callPeaksWaiter(peaks: Array<PeaksWithDistance>) {
@@ -44,8 +72,14 @@ export default class PeakyWorkerConnector {
   }
 
   // call with elevation as option
-  init(location: GeoLocation, options: PeakyOptions = {}) {
-    console.log("init worker");
+  async init(location: GeoLocation, options: PeakyOptions = {}) {
+    console.log("init worker main thread-------------------------------------------------------------------------");
+    // at first initializing it in the main thread to use fetch
+    //const peaky = new Peaky(new SrtmStorage(), location, options);
+    console.log("loading data main thread-------------------------------------------------------------------------");
+    //await peaky.init();
+    console.log("now switching to worker-------------------------------------------------------------------------");
+    // now doing everything in the background (all data should be present already)
     this.worker.postMessage({action: "init", data: {location: location, options: options}});
   }
 
@@ -76,62 +110,7 @@ export default class PeakyWorkerConnector {
     })
   }
 
-}/*{
-      const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
-      //const location = [ 49.227165, 9.1487209];// BW
-      const storage = new SrtmStorage();
-      const options = { };
-      let gl = props.location.coords;
-      if (Capacitor.getPlatform() == 'web') {
-        options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
-        gl = new GeoLocation(location[0], location[1]);
-      }
-      else {
-        if (props.location.elevation) {
-          options.elevation = props.location.elevation;
-        }
-      }
-      write_message(`starting peak calculation`);
-      const time = [performance.now()];
-      const peaky = new Peaky(storage, gl, options);
-      await peaky.init();
-      time.push(performance.now());
-      write_message(`init took ${time[1]-time[0]}`);
-      await peaky.calculateRidges();
-      time.push(performance.now());
-      write_message(`calculating ridges took ${time[2]-time[1]}`);
-      const { min_projected_height, max_projected_height, min_height, max_height } = peaky.getDimensions();
-  
-      write_message(`current elevation is ${peaky.view?.elevation}`);
-      write_message(`found elevations from ${min_height} to ${max_height}, and ${peaky.view?.ridges.length} ridges`);
-  
-      await peaky.findPeaks();
-      time.push(performance.now());
-      write_message(`calculating peaks took ${time[3]-time[2]}`);
-      write_message(`found ${peaky.peaks.length} peaks`);
-
-      if (canvasRef.current) {
-        const canHeight = max_projected_height - min_projected_height + 800;//800 is magic border constant, für Gipfel
-        const canWidth = peaky.options.circle_precision * MAGIC_CIRCLE_SCALE;
-        canvasRef.current.height = canHeight;
-        canvasRef.current.width = canWidth;
-        peaky.drawView(canvasRef.current, false); // true schreibt die Gipfel
-        let scale = 0.1;
-        if (containerRef.current) {
-          scale = Math.min(windowDimensions.width/canWidth, containerRef.current.offsetHeight/canHeight)
-          console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
-          //scale *= 1 / transformContext.transformState.scale;
-        }
-        console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
-        setWidth(canvasRef.current.offsetWidth * scale);
-        setCanvasScale(scale);
-        //canvasRef.current.style.transformOrigin = '0 0';
-        //canvasRef.current.style.transform = `scale(${scale.toFixed(2)})`;
-        time.push(performance.now());
-        write_message(`drawing took ${time[4]-time[3]}`);
-      }
-      const newCentralElevation = peaky.view.elevation;
-      setElevation(newCentralElevation);
-      setPeaks(peaky.peaks);
-    }
-*/
+  subscribeStatus(listener: (status: Status) => void) {
+    this.statusListener.push(listener);
+  }
+}
