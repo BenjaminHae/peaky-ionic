@@ -32,7 +32,9 @@ const write_message= (msg) => {
 const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
     while (canvasWaiter.length > 0 ) {
-      peaky.drawView(canvasWaiter.pop(), false); // true schreibt die Gipfel
+      const canvas = canvasWaiter.pop();
+      peaky.drawView(canvas, false); // true schreibt die Gipfel
+      canvas.oncontextrestored = () => {peaky.drawView(canvas, false)}
     }
   }
 }
@@ -48,8 +50,6 @@ const statusListener = (status) => {
 
 const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) => {
   location = new GeoLocation(location.lat, location.lon);
-  console.log(location);
-  console.log(options);
   write_message(`starting peak calculation`);
   const time = [performance.now()];
   peaky = new Peaky(new SrtmStorage(), location, options);
@@ -101,13 +101,10 @@ self.onmessage = (data: MessageEvent<any>) => {
   }
   else if (data.data.action === "fetch") {
     const waiter = fetchWaiter[data.data.id];
-    console.log(`receive fetch response ${data.data.id}`);
     if (data.data.state === "resolve") {
-      console.log(`receive fetch response ${data.data.id}, resolve`);
       waiter[0](new FakeResponseObject(data.data.result.status, data.data.result.ab));
     }
     else if (data.data.state === "reject") {
-      console.log(`receive fetch response ${data.data.id}, reject`);
       waiter[1](data.data.result);
     }
 

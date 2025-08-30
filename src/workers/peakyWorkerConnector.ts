@@ -15,12 +15,11 @@ export default class PeakyWorkerConnector {
     this.worker = new Worker(new URL('./peaky.ts', import.meta.url), {
       type: 'module'
     });
-    console.log(this.worker);
     this.worker.onmessage = (data) => this.messageHandler(data);
     this.worker.onerror = (err) => console.log(err);
   }
   messageHandler(parms/*{data: { data: PeakyWorkerResponse }}*/) {
-    console.log(parms);
+    //console.log(parms);
     const data = parms.data;
     if (data.action == "ridges") {
       this.dimensions = data.dimensions;
@@ -42,15 +41,10 @@ export default class PeakyWorkerConnector {
   handleFetch(id: string, args: Array<any>) {
     fetch.apply(null, args)
       .then(async (result)=> {
-        console.log("fetch successful");
-        console.log(result);
         const response = { status: result.status, ab:await (await result.blob()).arrayBuffer() }
-        console.log(response);
         this.worker.postMessage({action: "fetch", id: id, state: "resolve", result: response}, [response.ab]);
       })
       .catch((result)=> {
-        console.log("fetch unsuccessful");
-        console.log(result);
         this.worker.postMessage({action: "fetch", id: id, state: "reject", result: result}, [result]);
       })
   }
