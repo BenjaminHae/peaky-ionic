@@ -33,8 +33,9 @@ const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
     while (canvasWaiter.length > 0 ) {
       const canvas = canvasWaiter.pop();
-      peaky.drawView(canvas, false); // true schreibt die Gipfel
-      canvas.oncontextrestored = () => {peaky.drawView(canvas, false)}
+      const options = {horizon_offset: 0}
+      peaky.drawView(canvas, false, options); // true schreibt die Gipfel
+      canvas.oncontextrestored = () => {self.requestAnimationFrame(()=>peaky.drawView(canvas, false, options))}
     }
   }
 }

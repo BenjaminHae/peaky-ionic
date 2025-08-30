@@ -90,7 +90,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
        </div>
      ), [props.peaks, props.dimensions]);
 
-  const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height + 800;//800 is magic border constant, für Gipfel
+  const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height// + 800;//800 is magic border constant, für Gipfel
   const canWidth = props.dimensions.circle_precision * MAGIC_CIRCLE_SCALE;
 
   useEffect(()=> {
