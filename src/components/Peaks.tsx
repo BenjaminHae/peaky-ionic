@@ -36,9 +36,8 @@ const Peaks: React.FC = () => {
      callInit();
   }, [peakyWorker, location]);
 
-  const callCanvasDrawer = (canvas: OffscreenCanvas) => {
-    peakyWorker.drawToCanvas(canvas);
-  }
+  const callCanvasDrawer = (canvas: OffscreenCanvas) => peakyWorker.drawToCanvas(canvas);
+  const callExistingCanvasDrawer = (id: string) => peakyWorker.drawToCanvasId(id);
 
   const requestPermission = async () => {
     try {
@@ -89,7 +88,7 @@ const Peaks: React.FC = () => {
       <p>
         { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
       </p>
-      { dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} peaks={peaks} /> }
+      { dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
     </div>
   );
 };

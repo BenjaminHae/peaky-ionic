@@ -20,7 +20,8 @@ self.fetch = new Proxy(self.fetch, {
     });
 
 
-const canvasWaiter: Array<OffscreenCanvas> = [];
+const canvasWaiter = new Set([]);
+const canvasStorage: { [id: string]: OffscreenCanvas } = {};
 let peaky: Peaky | undefined;
 let ridgesPresent = false;
 
@@ -31,16 +32,20 @@ const write_message= (msg) => {
 }
 const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
-    while (canvasWaiter.length > 0 ) {
-      const canvas = canvasWaiter.pop();
+    canvasWaiter.forEach( (id) => {
+      const canvas = canvasStorage[id];
       const options = {horizon_offset: 0}
       peaky.drawView(canvas, false, options); // true schreibt die Gipfel
-      canvas.oncontextrestored = () => {self.requestAnimationFrame(()=>peaky.drawView(canvas, false, options))}
-    }
+      canvas.oncontextrestored = () => {console.log('context restored');peaky.drawView(canvas, false, options);self.requestAnimationFrame(()=>peaky.drawView(canvas, false, options))}
+      canvas.oncontextlost = () => {console.log('context lost');}
+      canvas.addEventListener("contextlost", (event) => console.log(event));
+      canvas.addEventListener("contextrestored", (event) => console.log(event));
+    });
+    canvasWaiter.clear();
   }
 }
-const drawToCanvas = (canvas: OffscreenCanvas) => {
-  canvasWaiter.push(canvas);
+const drawToCanvasId = (id: string) => {
+  canvasWaiter.add(id);
   handleCanvasWaiter();
 }
 
@@ -98,7 +103,11 @@ self.onmessage = (data: MessageEvent<any>) => {
     doPeaksCalculation();
   }
   else if (data.data.action === "draw") {
-    drawToCanvas(data.data.canvas);
+    canvasStorage[data.data.id] = data.data.canvas;
+    drawToCanvasId(data.data.id);
+  }
+  else if (data.data.action === "drawexisting") {
+    drawToCanvasId(data.data.id);
   }
   else if (data.data.action === "fetch") {
     const waiter = fetchWaiter[data.data.id];

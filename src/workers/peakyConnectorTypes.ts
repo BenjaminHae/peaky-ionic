@@ -7,6 +7,12 @@ interface PeakyWorkerMessageInit {
 interface PeakyWorkerMessageDraw {
   action: "draw";
   canvas: OffscreenCanvas;
+  id: string;
+}
+
+interface PeakyWorkerMessageDrawExisting {
+  action: "drawexisting";
+  id: string;
 }
 
 interface PeakyWorkerMessagePeaks {

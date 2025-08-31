@@ -3,12 +3,11 @@
   text-align: left;
   transform-origin: top left;
   transform: rotate(-60deg) translate(+0.2em, -1.0em);
-  background-color: white;
   white-space: nowrap;
   overflow-x: visible;
 }
 .peakStroke {
-  border-left: 1px solid black;
+  border-left: 1px solid light-dark(black, white);
   height: 2em;
   width: 0px;
 }

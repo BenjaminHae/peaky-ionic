@@ -10,6 +10,7 @@ import { Dimensions } from '../workers/peakyConnectorTypes';
 interface PeakZoomProps {
   dimensions: Dimensions;
   canvasDrawer: (canvas: OffscreenCanvas) => void;
+  existingCanvasDrawer: (canvas: string) => void;
   peaks: Array<PeakWithElevation>;
 }
 
@@ -67,7 +68,13 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
           onPinchingStart={movingStart}
           onPanningStop={movingEnd} 
           onPinchingStop={movingEnd}>
-        <PeakView transformer={transformComponentRef} ref={peakViewRef} dimensions={props.dimensions} canvasDrawer={props.canvasDrawer} peaks={props.peaks} />
+        <PeakView 
+          transformer={transformComponentRef} 
+          ref={peakViewRef} 
+          dimensions={props.dimensions} 
+          canvasDrawer={props.canvasDrawer} 
+          existingCanvasDrawer={props.existingCanvasDrawer} 
+          peaks={props.peaks} />
       </TransformWrapper>
     </div>
   )
