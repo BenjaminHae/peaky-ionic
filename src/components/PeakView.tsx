@@ -111,9 +111,11 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     if (canvasRef.current && offscreen) {
       const newId = props.canvasDrawer(offscreen);
       if (newId !== "") {
+        console.log("have drawn to new canvas");
         setOffscreenId(newId);
       }
       else if (offscreenId !== "") {
+        console.log("transferring failed, now drawing to existing canvas");
         props.existingCanvasDrawer(offscreenId);
       }
       let scale = 0.1;

@@ -84,7 +84,7 @@ const doPeaksCalculation = async () => {
   if (peaky) {
     const time = [performance.now()];
     await peaky.findPeaks();
-    self.postMessage({action: "peaks", peaks:  peaky.peaks});
+    self.postMessage({action: "peaks", peaks: peaky.peaks});
     time.push(performance.now());
     write_message(`calculating peaks took ${time[1]-time[0]}`);
     write_message(`found ${peaky.peaks.length} peaks`);
