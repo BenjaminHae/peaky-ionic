@@ -1,4 +1,4 @@
-import Peaky, { GeoLocation, projected_height, PeakWithDistance } from '@benjaminhae/peaky';
+import { GeoLocation, projected_height, PeakWithDistance, PeakyOptions } from '@benjaminhae/peaky';
 import { PeakyWorkerResponse, Dimensions, Status } from './peakyConnectorTypes';
 import SrtmStorage from '../capacitor_srtm_storage';
 
@@ -10,6 +10,7 @@ export default class PeakyWorkerConnector {
   statusListener: Array<(status: Status) => void> = [];
   dimensions?: Dimensions;
   peaks?: Array<PeakWithDistance>;
+  hasPeaks: boolean = false;
   
   constructor() {
     this.worker = new Worker(new URL('./peaky.ts', import.meta.url), {
@@ -18,17 +19,21 @@ export default class PeakyWorkerConnector {
     this.worker.onmessage = (data) => this.messageHandler(data);
     this.worker.onerror = (err) => console.log(err);
   }
-  messageHandler(parms/*{data: { data: PeakyWorkerResponse }}*/) {
+  messageHandler(parms: MessageEvent/*{data: { data: PeakyWorkerResponse }}*/) {
     //console.log(parms);
     const data = parms.data;
     if (data.action == "ridges") {
       this.dimensions = data.dimensions;
-      this.callRidgeWaiter(this.dimensions);
+      if (this.dimensions) {
+        this.callRidgeWaiter(this.dimensions);
+      }
     }
     else if (data.action == "peaks") {
       this.peaks = data.peaks;
-      this.hasPeaks = true;
-      this.callPeaksWaiter(this.peaks);
+      if (this.peaks) {
+        this.hasPeaks = true;
+        this.callPeaksWaiter(this.peaks);
+      }
     }
     else if (data.action == "status") {
       this.callStatusListener(data.status);
@@ -53,15 +58,21 @@ export default class PeakyWorkerConnector {
     this.statusListener.forEach((l) => new Promise<void>((r)=>{l(status); r()}));
   }
 
-  callPeaksWaiter(peaks: Array<PeaksWithDistance>) {
+  callPeaksWaiter(peaks: Array<PeakWithDistance>) {
     while (this.peakWaiter.length > 0 ) {
-      this.peakWaiter.pop()(peaks);
+      const peakHandler = this.peakWaiter.pop();
+      if (peakHandler) {
+        peakHandler(peaks);
+      }
     }
   }
 
   callRidgeWaiter(dimensions: Dimensions) {
     while (this.ridgeWaiter.length > 0 ) {
-      this.ridgeWaiter.pop()(dimensions);
+      const ridgeHandler = this.ridgeWaiter.pop();
+      if (ridgeHandler) {
+        ridgeHandler(dimensions);
+      }
     }
   }
 
@@ -89,7 +100,9 @@ export default class PeakyWorkerConnector {
   drawToCanvas(offscreen: OffscreenCanvas): string {
     try {
       const id = Math.random().toString(36).slice(2);
+      console.log(`sending canvas, creating id ${id}`);
       this.worker.postMessage({action: "draw", canvas: offscreen, id:id}, [offscreen]);
+      console.log(`sending canvas, with id ${id} was successful`);
       return id;
     } catch(e) {
       console.log(e);
@@ -97,12 +110,12 @@ export default class PeakyWorkerConnector {
     }
   }
 
-  drawToCanvasId(id: string): string {
+  drawToCanvasId(id: string): void {
     this.worker.postMessage({action: "drawexisting", id:id});
   }
 
   getPeaks(): Promise<Array<PeakWithDistance>> {
-    if (this.hasPeaks) {
+    if (this.hasPeaks && this.peaks) {
       return Promise.resolve(this.peaks);
     }
     this.worker.postMessage({action: "peaks"});

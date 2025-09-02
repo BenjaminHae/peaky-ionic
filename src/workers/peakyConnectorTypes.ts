@@ -1,3 +1,4 @@
+import { GeoLocation, type PeakyOptions, StatusMap, type PeakWithDistance } from '@benjaminhae/peaky';
 
 interface PeakyWorkerMessageInit {
   action: "init";
@@ -27,11 +28,11 @@ interface PeakyWorkerWantsFetchResponse {
 }
 
 export interface Dimensions { 
-  min_projected_height, 
-  max_projected_height, 
-  min_height, 
-  max_height, 
-  circle_precision: number 
+  min_projected_height: number;
+  max_projected_height: number;
+  min_height: number;
+  max_height: number;
+  circle_precision: number;
   central_elevation: number;
 }
 interface PeakyWorkerResponseRidges {
@@ -41,7 +42,7 @@ interface PeakyWorkerResponseRidges {
 
 interface PeakyWorkerResponsePeaks {
   action: "peaks";
-  peaks: Array<PeakWithElevation>;
+  peaks: Array<PeakWithDistance>;
 }
 
 interface PeakyWorkerWantsFetch {

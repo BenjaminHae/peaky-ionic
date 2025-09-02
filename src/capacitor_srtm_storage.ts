@@ -1,10 +1,10 @@
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, type StatOptions, type WriteFileOptions } from '@capacitor/filesystem';
 
 export default class SrtmStorage {
   constructor() {
     //Filesystem.requestPermissions(); only when directory is Documents or External
   }
-  filenameToOptions(tile: string) {
+  filenameToOptions(tile: string): StatOptions {
     return {directory: Directory.Data, path: tile}
   }
   // existsSync
@@ -35,7 +35,7 @@ export default class SrtmStorage {
     if (Uint8Array.hasOwnProperty('fromBase64')) {
       return Uint8Array.fromBase64(b64);
     } else {
-      const binaryString = atob(b64);
+      const binaryString = atob(b64 as string);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
@@ -58,8 +58,8 @@ export default class SrtmStorage {
 
   async writeTile(tile: string, data: ArrayBuffer): Promise<void> {
     const options = this.filenameToOptions(tile);
-    options.data = _arrayBufferToBase64(data);
-    await Filesystem.writeFile(options);
+    (options as WriteFileOptions).data = _arrayBufferToBase64(data);
+    await Filesystem.writeFile(options as WriteFileOptions);
   }
   
   // src/srtm.js
@@ -69,7 +69,7 @@ export default class SrtmStorage {
 }
 function _arrayBufferToBase64( buffer: ArrayBuffer ): string {
   const bytes = new Uint8Array( buffer );
-  if (typeof bytes.toBase64 === 'function') {
+  if (typeof (bytes as any).toBase64 === 'function') {
     return bytes.toBase64();
   } else {
     let binary = '';

@@ -2,16 +2,16 @@
 import PeakView, {PeakViewRef} from './PeakView';
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, useTransformContext } from "react-zoom-pan-pinch";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { GeoLocation, PeakWithElevation } from '@benjaminhae/peaky';
+import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
 import compassHeading from '../compass_heading';
 import { Dimensions } from '../workers/peakyConnectorTypes';
 
 interface PeakZoomProps {
   dimensions: Dimensions;
-  canvasDrawer: (canvas: OffscreenCanvas) => void;
+  canvasDrawer: (canvas: OffscreenCanvas) => string;
   existingCanvasDrawer: (canvas: string) => void;
-  peaks: Array<PeakWithElevation>;
+  peaks: Array<PeakWithDistance>;
 }
 
 const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
@@ -26,8 +26,10 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
     setDirection(direction);
   }
 
-  const orientationListener = useCallback((event) => {
-    gotoDirection(compassHeading(event.alpha, event.beta, event.gamma))
+  const orientationListener = useCallback((event: DeviceOrientationEvent) => {
+    if (event.alpha && event.beta && event.gamma) {
+      gotoDirection(compassHeading(event.alpha, event.beta, event.gamma))
+    }
   }, [setDirectionsDisabled]);
 
   useEffect(() => {
@@ -44,14 +46,18 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
 
   const movingStart = (ref: ReactZoomPanPinchRef) => {
     if (!directionsDisabled) {
-      setPositionX(transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale);
+      if (transformComponentRef.current) {
+        setPositionX(transformComponentRef.current.instance.transformState.positionX / transformComponentRef.current.instance.transformState.scale);
+      }
     }
     setDirectionsDisabled(true);
   }
 
   const movingEnd = (ref: ReactZoomPanPinchRef) => {
-    const offset = positionX - transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale;
-    peakViewRef.current?.writeOffset(offset);
+    if (transformComponentRef.current) {
+      const offset = positionX - transformComponentRef.current?.instance.transformState.positionX / transformComponentRef.current?.instance.transformState.scale;
+      peakViewRef.current?.writeOffset(offset);
+    }
     setDirectionsDisabled(false);
   }
 
@@ -63,7 +69,6 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
           minScale={0.1}
           maxScale={20}
           ref={transformComponentRef} 
-          className="fullSize"
           onPanningStart={movingStart} 
           onPinchingStart={movingStart}
           onPanningStop={movingEnd} 

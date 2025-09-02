@@ -1,8 +1,9 @@
 import './Peaks.css';
 import PeakZoom from './PeakZoom';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
-import { GeoLocation } from '@benjaminhae/peaky';
+import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
@@ -10,9 +11,9 @@ import Progress from './Progress';
 const Peaks: React.FC = () => {
   const [orientationAllowed, setOrientationAllowed] = useState(false);
   const [locationAllowed, setLocationAllowed] = useState(false);
-  const [location, setLocation] = useState<{coords: GeoLocation, elevation: number|null}|null>(null);
+  const [location, setLocation] = useState<{coords: GeoLocation, elevation?: number|null}|null>(null);
   const [dimensions, setDimensions] = useState<Dimensions|null>(null);
-  const [peaks, setPeaks] = useState<Array<PeakWithElevation>>([]);
+  const [peaks, setPeaks] = useState<Array<PeakWithDistance>>([]);
   const [status, setStatus] = useState<Status>();
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
@@ -21,11 +22,12 @@ const Peaks: React.FC = () => {
    () => {
      const callInit = async () => {
        if (location) {
-         const options = { };
+         const options = {};
+         if (location.elevation !== null) 
+         (options as any).elevation = location.elevation;
          if (Capacitor.getPlatform() == 'web') {
-           options.provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
+           (options as any).provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
          }
-         options.elevation = location.elevation;
          peakyWorker.subscribeStatus((s) => setStatus(s));
          await peakyWorker.init(location.coords, options);
          const _dimensions = await peakyWorker.getDimensions();
@@ -41,7 +43,7 @@ const Peaks: React.FC = () => {
 
   const requestPermission = async () => {
     try {
-      await DeviceMotionEvent.requestPermission();
+      await (DeviceMotionEvent as any).requestPermission();
       setOrientationAllowed(true);
     } catch {
     }
@@ -50,7 +52,7 @@ const Peaks: React.FC = () => {
     try {
       const perm = await GeoLocationService.checkPermissions();
       if (!perm.location || ! perm.coarseLocation) {
-        await GeoLocationService.requestPermissions('coarseLocation');
+        await GeoLocationService.requestPermissions({permissions: ['coarseLocation']});
       }
       setLocationAllowed(true);
       const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true});
