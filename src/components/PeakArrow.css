@@ -1,0 +1,8 @@
+#triangle-up {
+  width: 10;
+  height: 10;
+  position: absolute;
+}
+#triangle-container {
+  position: absolute;
+}

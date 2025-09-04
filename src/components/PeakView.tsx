@@ -6,6 +6,7 @@ import { Motion } from '@capacitor/motion';
 import Peaky, { type GeoLocation, projected_height, type PeakWithDistance } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
 import PeakLabel from './PeakLabel';
+import PeakArrow from './PeakArrow';
 import { IonButton } from '@ionic/react';
 import { type Dimensions } from '../workers/peakyConnectorTypes';
 
@@ -129,12 +130,17 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     }
   }, [offscreen]);
 
+  // todo calculate visible area for arrow
+
   return (
         <TransformComponent>
           <div className="fullSize" ref={containerRef}>
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               {peakItems}
+              { props.peaks.length > 1 && 
+                <PeakArrow elementX={props.peaks[0].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[0].distance, props.peaks[0].elevation, 0)} x={600} y={600} /> 
+              }
             </div>
           </div>
         </TransformComponent>
