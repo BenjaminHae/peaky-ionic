@@ -34,10 +34,8 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
 
   useEffect(() => {
     if (!directionsDisabled) {
-      console.log("add event listener")
       window.addEventListener("deviceorientation", orientationListener);
     } else {
-      console.log("remove event listener")
       window.removeEventListener("deviceorientation", orientationListener);
     }
     return () => window.removeEventListener("deviceorientation", orientationListener)

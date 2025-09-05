@@ -49,7 +49,6 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     if (props.transformer.current) {
       const { setTransform } = props.transformer.current;
       const scale = transformContext.transformState.scale;
-      console.log(`zooming with offset ${offset}`);
       let newPositionX = -dir/360 * width - offset 
       if (newPositionX < 0) {
         newPositionX += width;
@@ -60,7 +59,6 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     }
   };
   const writeOffset = (off: number) => {
-    console.log(`writing offset ${offset}`);
     setOffset(offset + off);
   }
   useImperativeHandle(ref, () => ({
@@ -112,25 +110,24 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     if (canvasRef.current && offscreen) {
       const newId = props.canvasDrawer(offscreen);
       if (newId !== "") {
-        console.log("have drawn to new canvas");
         setOffscreenId(newId);
       }
       else if (offscreenId !== "") {
-        console.log("transferring failed, now drawing to existing canvas");
         props.existingCanvasDrawer(offscreenId);
       }
       let scale = 0.1;
       if (containerRef.current) {
         scale = Math.min(windowDimensions.width/(canWidth*MAGIC_CIRCLE_SCALE), containerRef.current.offsetHeight/canHeight);
-        console.log(`containerWidth: ${windowDimensions.width}, canWidth: ${canWidth}, containerHeight: ${containerRef.current.offsetHeight}, canHeight: ${canHeight}, scale: ${scale}`);
       }
-      console.log(`setting width to ${canvasRef.current.offsetWidth * scale}`);
       setWidth(canvasRef.current.offsetWidth * scale * MAGIC_CIRCLE_SCALE);
       setCanvasScale(scale);
     }
   }, [offscreen]);
 
   // todo calculate visible area for arrow
+  //
+  const arrowX = (-transformContext.transformState.positionX + 100)*transformContext.transformState.scale;
+  console.log(` arrow X ${transformContext.transformState.positionX}, ${transformContext.transformState.scale} = ${arrowX}`);
 
   return (
         <TransformComponent>
@@ -139,7 +136,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               {peakItems}
               { props.peaks.length > 1 && 
-                <PeakArrow elementX={props.peaks[0].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[0].distance, props.peaks[0].elevation, 0)} x={600} y={600} /> 
+                <PeakArrow elementX={props.peaks[4].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} x={arrowX} y={600} /> 
               }
             </div>
           </div>

@@ -13,7 +13,6 @@ self.fetch = new Proxy(self.fetch, {
         // Do whatever you want with fetch request
         return new Promise<any>((resolve, reject) => {
           const id = Math.random().toString(36).slice(2);
-          console.log(`sending fetch request ${id}`);
           fetchWaiter[id] = [resolve, reject];
           self.postMessage({ action: "fetch", id: id, args: [args[0]] });
         });

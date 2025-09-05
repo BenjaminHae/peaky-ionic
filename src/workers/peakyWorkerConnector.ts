@@ -20,7 +20,6 @@ export default class PeakyWorkerConnector {
     this.worker.onerror = (err) => console.log(err);
   }
   messageHandler(parms: MessageEvent/*{data: { data: PeakyWorkerResponse }}*/) {
-    //console.log(parms);
     const data = parms.data;
     if (data.action == "ridges") {
       this.dimensions = data.dimensions;
@@ -78,12 +77,6 @@ export default class PeakyWorkerConnector {
 
   // call with elevation as option
   async init(location: GeoLocation, options: PeakyOptions = {}) {
-    console.log("init worker main thread-------------------------------------------------------------------------");
-    // at first initializing it in the main thread to use fetch
-    //const peaky = new Peaky(new SrtmStorage(), location, options);
-    console.log("loading data main thread-------------------------------------------------------------------------");
-    //await peaky.init();
-    console.log("now switching to worker-------------------------------------------------------------------------");
     // now doing everything in the background (all data should be present already)
     this.worker.postMessage({action: "init", data: {location: location, options: options}});
   }
@@ -100,9 +93,7 @@ export default class PeakyWorkerConnector {
   drawToCanvas(offscreen: OffscreenCanvas): string {
     try {
       const id = Math.random().toString(36).slice(2);
-      console.log(`sending canvas, creating id ${id}`);
       this.worker.postMessage({action: "draw", canvas: offscreen, id:id}, [offscreen]);
-      console.log(`sending canvas, with id ${id} was successful`);
       return id;
     } catch(e) {
       console.log(e);
