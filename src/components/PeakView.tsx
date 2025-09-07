@@ -126,7 +126,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
 
   // todo calculate visible area for arrow
   //
-  const arrowX = (-transformContext.transformState.positionX + 100)*transformContext.transformState.scale;
+  const arrowX = (-transformContext.transformState.positionX * MAGIC_CIRCLE_SCALE)*transformContext.transformState.scale;  // windowDimensions.width
   console.log(` arrow X ${transformContext.transformState.positionX}, ${transformContext.transformState.scale} = ${arrowX}`);
 
   return (
@@ -135,8 +135,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               {peakItems}
-              { props.peaks.length > 1 && 
-                <PeakArrow elementX={props.peaks[4].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} x={arrowX} y={600} /> 
+              { props.peaks.length > 5 && 
+                <PeakArrow elementX={props.peaks[4].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} x={arrowX} y={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} viewportX={ -transformContext.transformState.positionX * MAGIC_CIRCLE_SCALE} viewportY={ -transformContext.transformState.positionY} viewportHeight={windowDimensions.height} viewportWidth={windowDimensions.width} viewportScale={transformContext.transformState.scale} canvasScale={ canvasScale }/> 
               }
             </div>
           </div>
