@@ -1,5 +1,6 @@
 import './Peaks.css';
 import PeakZoom from './PeakZoom';
+import PeakList from './PeakList';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
@@ -8,7 +9,12 @@ import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
 
-const Peaks: React.FC = () => {
+interface PeaksProps { 
+  selected_area: string;
+  set_possible_selections: (possibilities: Array<string>) => void;
+}
+
+const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const [orientationAllowed, setOrientationAllowed] = useState(false);
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [location, setLocation] = useState<{coords: GeoLocation, elevation?: number|null}|null>(null);
@@ -18,7 +24,7 @@ const Peaks: React.FC = () => {
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
  
-  useEffect(
+  useMemo(
    () => {
      const callInit = async () => {
        if (location) {
@@ -90,7 +96,8 @@ const Peaks: React.FC = () => {
       <p>
         { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
       </p>
-      { dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
+      { props.selected_area == 'list' && peaks.length > 0 && <PeakList peaks={peaks}/>}
+      { props.selected_area == 'peaks' && dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
     </div>
   );
 };
