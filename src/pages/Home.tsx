@@ -7,9 +7,13 @@ import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/i
 import { IonButton, IonButtons, IonIcon } from '@ionic/react';
 
 const Home: React.FC = () => {
-  const [selectedArea, setSelectedArea] = useState<string>('map');
-  const selectedItems = [['map', mapOutline], ['list', listCircleOutline], ['peaks', navigateCircleOutline]];
-  const selectorButtons = selectedItems.map((item) =>
+  const [selectedArea, setSelectedArea] = useState<string>('silhouette');
+  const [selectItems, setSelectItems] = useState<Array<string>>([]);
+  const possibleSelectItems = {'map': mapOutline, 'list': listCircleOutline, 'silhouette': navigateCircleOutline};
+  const selector = (items: Array<string>) => {
+    setSelectItems(items.map((item) => [item, possibleSelectItems[item]]));
+  }; 
+  const selectorButtons = selectItems.map((item) =>
     <IonButton key={item[0]} onClick={()=>{setSelectedArea(item[0])}} fill={selectedArea == item[0] ? "solid" : "clear"} >
       <IonIcon slot="icon-only" icon={item[1]}></IonIcon>
     </IonButton>
@@ -30,7 +34,7 @@ const Home: React.FC = () => {
             <IonTitle size="large">Peaky</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <Peaks selected_area={selectedArea}/>
+        <Peaks selected_area={selectedArea} set_possible_selections={selector}/>
       </IonContent>
     </IonPage>
   );

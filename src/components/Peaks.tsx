@@ -38,7 +38,9 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
          await peakyWorker.init(location.coords, options);
          const _dimensions = await peakyWorker.getDimensions();
          setDimensions(_dimensions);
+         props.set_possible_selections(['silhouette']);
          setPeaks(await peakyWorker.getPeaks());
+         props.set_possible_selections(['silhouette', 'map', 'list']);
        }
      }
      callInit();
@@ -83,10 +85,6 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
     requestLocationPermissions()
   }
 
-        /*Move to <a onClick={()=>gotoDirection(0, false)}>North</a>, 
-        <a onClick={()=>gotoDirection(90, false)}>East</a>, 
-        <a onClick={()=>gotoDirection(180, false)}>South</a>, 
-        <a onClick={()=>gotoDirection(270, false)}>West</a>*/
   return (
     <div id="container">
       { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
@@ -97,7 +95,8 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
         { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
       </p>
       { props.selected_area == 'list' && peaks.length > 0 && <PeakList peaks={peaks}/>}
-      { props.selected_area == 'peaks' && dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
+      { props.selected_area == 'map' && peaks.length > 0 && <div>Map</div> }
+      { props.selected_area == 'silhouette' && dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
     </div>
   );
 };
