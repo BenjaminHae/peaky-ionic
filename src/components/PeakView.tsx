@@ -20,6 +20,7 @@ interface ContainerProps {
   existingCanvasDrawer: (canvas: string) => void;
   peaks: Array<PeakWithDistance>;
   dimensions: Dimensions;
+  selectedPeak?: PeakWithDistance;
 }
 export interface PeakViewRef {
   zoomToDirection: (direction: number, fast?: boolean) => void;
@@ -120,14 +121,10 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         scale = Math.min(windowDimensions.width/(canWidth*MAGIC_CIRCLE_SCALE), containerRef.current.offsetHeight/canHeight);
       }
       setWidth(canvasRef.current.offsetWidth * scale * MAGIC_CIRCLE_SCALE);
+      console.log(`setting canvas Scale to ${scale}`);
       setCanvasScale(scale);
     }
   }, [offscreen]);
-
-  // todo calculate visible area for arrow
-  //
-  const arrowX = (-transformContext.transformState.positionX * MAGIC_CIRCLE_SCALE)*transformContext.transformState.scale;  // windowDimensions.width
-  console.log(` arrow X ${transformContext.transformState.positionX}, ${transformContext.transformState.scale} = ${arrowX}`);
 
   return (
         <TransformComponent>
@@ -135,8 +132,17 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               {peakItems}
-              { props.peaks.length > 5 && 
-                <PeakArrow elementX={props.peaks[4].direction * MAGIC_CIRCLE_SCALE} elementY={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} x={arrowX} y={projected_height(props.dimensions.central_elevation, props.peaks[4].distance, props.peaks[4].elevation, 0)} viewportX={ -transformContext.transformState.positionX * MAGIC_CIRCLE_SCALE} viewportY={ -transformContext.transformState.positionY} viewportHeight={windowDimensions.height} viewportWidth={windowDimensions.width} viewportScale={transformContext.transformState.scale} canvasScale={ canvasScale }/> 
+              { props.selectedPeak && 
+                <PeakArrow 
+                  elementX={props.selectedPeak.direction * MAGIC_CIRCLE_SCALE} 
+                  elementY={projected_height(props.dimensions.central_elevation, props.selectedPeak.distance, props.selectedPeak.elevation, 0)} 
+                  viewportX={ -transformContext.transformState.positionX * MAGIC_CIRCLE_SCALE} 
+                  viewportY={ -transformContext.transformState.positionY} 
+                  viewportHeight={windowDimensions.height} 
+                  viewportWidth={windowDimensions.width} 
+                  viewportScale={transformContext.transformState.scale} 
+                  canvasScale={ canvasScale }
+                /> 
               }
             </div>
           </div>

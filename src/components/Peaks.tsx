@@ -8,10 +8,13 @@ import { Capacitor } from '@capacitor/core';
 import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
+import { IonToolbar, IonButton, IonButtons, IonIcon  } from '@ionic/react';
+import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/icons';
 
 interface PeaksProps { 
   selected_area: string;
   set_possible_selections: (possibilities: Array<string>) => void;
+  set_selection: (selection: string) => void;
 }
 
 const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
@@ -21,6 +24,14 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const [dimensions, setDimensions] = useState<Dimensions|null>(null);
   const [peaks, setPeaks] = useState<Array<PeakWithDistance>>([]);
   const [status, setStatus] = useState<Status>();
+  const [selectedPeak, setSelectedPeak] = useState<PeakWithDistance|undefined>();
+
+  const [selectedArea, setSelectedArea] = useState<string>('silhouette');
+  const [selectItems, setSelectItems] = useState<Array<string>>([]);
+  const possibleSelectItems = {'map': mapOutline, 'list': listCircleOutline, 'silhouette': navigateCircleOutline};
+  const areaSelector = (items: Array<string>) => {
+    setSelectItems(items.map((item) => [item, possibleSelectItems[item]]));
+  }; 
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
  
@@ -38,9 +49,9 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
          await peakyWorker.init(location.coords, options);
          const _dimensions = await peakyWorker.getDimensions();
          setDimensions(_dimensions);
-         props.set_possible_selections(['silhouette']);
+         areaSelector(['silhouette']);
          setPeaks(await peakyWorker.getPeaks());
-         props.set_possible_selections(['silhouette', 'map', 'list']);
+         areaSelector(['silhouette', 'map', 'list']);
        }
      }
      callInit();
@@ -85,19 +96,48 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
     requestLocationPermissions()
   }
 
+  
+  const peak_selector = (peak: PeakWithDistance, display?:'map'|'silhouette') => {
+    setSelectedPeak(peak);
+    if (peak && display) {
+      setSelectedArea(display);
+    }
+  };
+
+  const selectorButtons = selectItems.map((item) =>
+    <IonButton key={item[0]} onClick={()=>{setSelectedArea(item[0])}} fill={selectedArea == item[0] ? "solid" : "clear"} >
+      <IonIcon slot="icon-only" icon={item[1]}></IonIcon>
+    </IonButton>
+  );
+
   return (
-    <div id="container">
-      { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
-      { status && status.state_no < 5 &&
-        <Progress status={status}/>
-      }
-      <p>
-        { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
-      </p>
-      { props.selected_area == 'list' && peaks.length > 0 && <PeakList peaks={peaks}/>}
-      { props.selected_area == 'map' && peaks.length > 0 && <div>Map</div> }
-      { props.selected_area == 'silhouette' && dimensions && <PeakZoom dimensions={dimensions} canvasDrawer={callCanvasDrawer} existingCanvasDrawer={callExistingCanvasDrawer} peaks={peaks} /> }
-    </div>
+    <>
+      <IonToolbar>
+        <p>
+          { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
+        </p>
+        <IonButtons slot="end">
+          { selectorButtons }
+        </IonButtons>
+      </IonToolbar>
+      <div id="container">
+        { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
+        { status && status.state_no < 5 &&
+          <Progress status={status}/>
+        }
+        { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
+        { selectedArea == 'map' && peaks.length > 0 && <div>Map</div> }
+        { selectedArea == 'silhouette' && dimensions && 
+          <PeakZoom 
+            dimensions={dimensions} 
+            canvasDrawer={callCanvasDrawer} 
+            existingCanvasDrawer={callExistingCanvasDrawer} 
+            peaks={peaks}
+            selectedPeak={selectedPeak} 
+            unselectPeak={() => {peak_selector(undefined)}}
+          /> }
+      </div>
+    </>
   );
 };
 
