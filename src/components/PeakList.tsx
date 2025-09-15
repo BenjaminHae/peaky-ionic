@@ -9,6 +9,7 @@ import { mapOutline, navigateCircleOutline } from 'ionicons/icons';
 
 interface PeakListProps { 
   peaks: Array<PeakWithDistance>;
+  peak_selector: (peak: PeakWithDistance, display:'map'|'silhouette') => void;
 }
 
 const PeakList: React.FC<PeakListProps> = (props:PeakListProps) => {
@@ -34,7 +35,11 @@ const PeakList: React.FC<PeakListProps> = (props:PeakListProps) => {
   ).map(
    (peak, index) =>
        <IonItem key={`peak-item-${index}`}>
-         <IonLabel>{peak.name} ({peak.elevation.toFixed(0)} m)</IonLabel><IonButtons slot="start"><IonButton><IonIcon icon={mapOutline}></IonIcon></IonButton><IonButton><IonIcon icon={navigateCircleOutline}></IonIcon></IonButton></IonButtons>
+         <IonLabel>{peak.name} {peak.elevation.toFixed(0)} m (Entfernung: {(peak.distance/1000).toFixed(1)} km)</IonLabel>
+         <IonButtons slot="start">
+           <IonButton onClick={props.peak_selector(peak, 'map')}><IonIcon icon={mapOutline}></IonIcon></IonButton>
+           <IonButton onClick={props.peak_selector(peak, 'silhouette')}><IonIcon icon={navigateCircleOutline}></IonIcon></IonButton>
+         </IonButtons>
        </IonItem>
      );
 
