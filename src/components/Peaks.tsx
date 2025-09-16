@@ -1,6 +1,7 @@
 import './Peaks.css';
 import PeakZoom from './PeakZoom';
 import PeakList from './PeakList';
+import PeakMap from './PeakMap';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
@@ -114,7 +115,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
     <>
       <IonToolbar>
         <p>
-          { location && <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> }
+          { location ? <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> : <span>Waiting for location ...</span>}
         </p>
         <IonButtons slot="end">
           { selectorButtons }
@@ -126,7 +127,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
           <Progress status={status}/>
         }
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
-        { selectedArea == 'map' && peaks.length > 0 && <div>Map</div> }
+        { selectedArea == 'map' && peaks.length > 0 && <PeakMap /> }
         { selectedArea == 'silhouette' && dimensions && 
           <PeakZoom 
             dimensions={dimensions} 

@@ -94,7 +94,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
          }}>
          <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
        </div>
-     ), [props.peaks, props.dimensions]);
+     ), [props.peaks, props.dimensions, canvasScale]);
 
   const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height// + 800;//800 is magic border constant, für Gipfel
   const canWidth = props.dimensions.circle_precision;
@@ -118,6 +118,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       }
       let scale = 0.1;
       if (containerRef.current) {
+        console.log(`setting canvas scale from Math.min(windowDimensions.width/(canWidth*MAGIC_CIRCLE_SCALE), containerRef.current.offsetHeight/canHeight)`);
+        console.log(`setting canvas scale from Math.min(${windowDimensions.width}/(${canWidth}*MAGIC_CIRCLE_SCALE), ${containerRef.current.offsetHeight}/${canHeight})`);
         scale = Math.min(windowDimensions.width/(canWidth*MAGIC_CIRCLE_SCALE), containerRef.current.offsetHeight/canHeight);
       }
       setWidth(canvasRef.current.offsetWidth * scale * MAGIC_CIRCLE_SCALE);
