@@ -42,8 +42,14 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const [text, setText] = useState<Array<string>>([]);
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef2 = useRef<HTMLCanvasElement>(null);
+  const canvasRef3 = useRef<HTMLCanvasElement>(null);
   const [offscreen, setOffscreen] = useState<OffscreenCanvas|undefined>(undefined);
+  const [offscreen2, setOffscreen2] = useState<OffscreenCanvas|undefined>(undefined);
+  const [offscreen3, setOffscreen3] = useState<OffscreenCanvas|undefined>(undefined);
   const [offscreenId, setOffscreenId] = useState<string>("");
+  const [offscreenId2, setOffscreenId2] = useState<string>("");
+  const [offscreenId3, setOffscreenId3] = useState<string>("");
   const containerRef = useRef(null);
   const transformContext = useTransformContext();
   const zoomToDirection = (dir: number, fast: boolean=true) => {
@@ -83,18 +89,19 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const peakItems = useMemo(()=>{
     const minHeight = props.dimensions.min_projected_height;
     return props.peaks.map(
-     (peak, index) => 
-       <div 
-         className="PeakContainer" 
-         key={`peak-${index}`} 
-         style={{
-           left: peak.direction * MAGIC_CIRCLE_SCALE, 
-           bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0) - props.dimensions.min_projected_height, 
-           transform:`scale(${(1/canvasScale).toFixed(2)})`, 
-           transformOrigin:"bottom left"
-         }}>
-         <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
-       </div>
+     (peak, index) => [-1,1,2].map( (canvasId) => 
+         <div 
+           className="PeakContainer" 
+           key={`peak-${index}-${canvasId}`} 
+           style={{
+             left: canvasId * peak.direction * MAGIC_CIRCLE_SCALE, 
+             bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0) - props.dimensions.min_projected_height, 
+             transform:`scale(${(1/canvasScale).toFixed(2)})`, 
+             transformOrigin:"bottom left"
+           }}>
+           <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
+         </div>
+         )
        )
      }
      , [props.peaks, props.dimensions, canvasScale]);
@@ -110,6 +117,22 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       }
     }
   }, [canvasRef.current]);
+  useEffect(()=> {
+    if(canvasRef2.current) {
+      try {
+        setOffscreen2(canvasRef2.current.transferControlToOffscreen());
+      } catch {
+      }
+    }
+  }, [canvasRef2.current]);
+  useEffect(()=> {
+    if(canvasRef3.current) {
+      try {
+        setOffscreen3(canvasRef3.current.transferControlToOffscreen());
+      } catch {
+      }
+    }
+  }, [canvasRef3.current]);
   useEffect(()=> {
     if (canvasRef.current && offscreen) {
       const newId = props.canvasDrawer(offscreen);
@@ -130,12 +153,36 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       setCanvasScale(scale);
     }
   }, [offscreen]);
+  useEffect(()=> {
+    if (offscreen2) {
+      const newId = props.canvasDrawer(offscreen2);
+      if (newId !== "") {
+        setOffscreenId2(newId);
+      }
+      else if (offscreenId !== "") {
+        props.existingCanvasDrawer(offscreenId2);
+      }
+    }
+  }, [offscreen2]);
+  useEffect(()=> {
+    if (offscreen3) {
+      const newId = props.canvasDrawer(offscreen3);
+      if (newId !== "") {
+        setOffscreenId3(newId);
+      }
+      else if (offscreenId !== "") {
+        props.existingCanvasDrawer(offscreenId3);
+      }
+    }
+  }, [offscreen3]);
 
   return (
         <TransformComponent>
           <div className="fullSize" ref={containerRef}>
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
+              <canvas className="canvas" ref={canvasRef2} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `-${canWidth*2}px`, top: '0px'}}/>
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
+              <canvas className="canvas" ref={canvasRef3} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `${canWidth*2}px`, top: '0px'}}/>
               {peakItems}
               { props.selectedPeak && 
                 <PeakArrow 
