@@ -80,21 +80,24 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const peakItems = useMemo(()=>
-    props.peaks.map(
+  const peakItems = useMemo(()=>{
+    const minHeight = props.dimensions.min_projected_height;
+    return props.peaks.map(
      (peak, index) => 
        <div 
          className="PeakContainer" 
          key={`peak-${index}`} 
          style={{
            left: peak.direction * MAGIC_CIRCLE_SCALE, 
-           bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0), 
+           bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0) - props.dimensions.min_projected_height, 
            transform:`scale(${(1/canvasScale).toFixed(2)})`, 
            transformOrigin:"bottom left"
          }}>
          <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
        </div>
-     ), [props.peaks, props.dimensions, canvasScale]);
+       )
+     }
+     , [props.peaks, props.dimensions, canvasScale]);
 
   const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height// + 800;//800 is magic border constant, für Gipfel
   const canWidth = props.dimensions.circle_precision;
