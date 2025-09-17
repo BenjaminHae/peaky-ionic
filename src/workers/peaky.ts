@@ -70,7 +70,7 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   // this is true after calculateRidges
   if (peaky.view) {
     ridgesPresent = true;
-    const dimensions = peaky.getDimensions() as Dimensions;
+    const dimensions = peaky.getDimensions(0) as Dimensions;
     dimensions.central_elevation = peaky.view.elevation;
     self.postMessage({ action: "ridges", dimensions: dimensions });
     time.push(performance.now());
