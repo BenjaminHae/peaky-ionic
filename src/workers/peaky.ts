@@ -22,8 +22,12 @@ self.fetch = new Proxy(self.fetch, {
 
 const canvasWaiter = new Set<string>([]);
 const canvasStorage: { [id: string]: OffscreenCanvas } = {};
+let calculating_location: GeoLocation;
+let calculating_elevation: number;
 let peaky: Peaky | undefined;
 let ridgesPresent = false;
+let started_calculating_peaks = false;
+let finished_calculating_peaks = false;
 
 // hack to make capacitor work
 (self as any).window = self;
@@ -58,7 +62,18 @@ const statusListener = (status: PeakyStatus) => {
 }
 
 const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) => {
+  if (calculating_location && location.lat == calculating_location.lat && location.lon == calculating_location.lon) {
+    if (calculating_elevation && options.elevation && options.elevation == calculating_elevation) {
+      console.log("Calculation for this location has already started");
+      return;
+    }
+  }
   location = new GeoLocation(location.lat, location.lon);
+  calculating_location = location;
+  calculating_elevation = options.elevation;
+  started_calculating_peaks = false;
+  finished_calculating_peaks = false;
+ 
   write_message(`starting peak calculation`);
   const time = [performance.now()];
   peaky = new Peaky(new SrtmStorage(), location, options);
@@ -81,8 +96,17 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
 
 const doPeaksCalculation = async () => {
   if (peaky) {
+    if (peaky.peaks.length > 0 || started_calculating_peaks ) {
+      console.log('calculating peaks already started');
+      if (finished_calculating_peaks) {
+        self.postMessage({action: "peaks", peaks: peaky.peaks});
+      }
+      return
+    }
+    started_calculating_peaks = true;
     const time = [performance.now()];
     await peaky.findPeaks();
+    finished_calculating_peaks = true;
     self.postMessage({action: "peaks", peaks: peaky.peaks});
     time.push(performance.now());
     write_message(`calculating peaks took ${time[1]-time[0]}`);
