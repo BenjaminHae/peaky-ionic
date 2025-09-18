@@ -1,10 +1,13 @@
 import './PeakMap.css';
+import markerIcon from "leaflet/dist/images/marker-icon.png";
 import { TileLayer, useMap, Marker, Popup, CircleMarker } from 'react-leaflet'
+import { Icon } from 'leaflet';
 import Peaky, { type GeoLocation, type PeakWithDistance } from '@benjaminhae/peaky';
 import { useEffect, useMemo } from 'react';
 import {
   useIonViewDidEnter,
 } from '@ionic/react';
+
 
 export interface PeakMapProps { 
   name: string;
@@ -24,9 +27,10 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   }, [map]);
   
   const peakItems = useMemo(()=>{
+    const icon = new Icon({iconUrl: markerIcon, iconSize: [25,41], iconAnchor: [12,41]});
     return props.peaks.map(
      (peak, index) => 
-        <Marker position={[peak.location.lat, peak.location.lon]} key={`peak-${index}`} >
+        <Marker position={[peak.location.lat, peak.location.lon]} key={`peak-${index}`} icon={icon}>
           <Popup>
            {peak.name} {peak.elevation.toFixed(0)} m
           </Popup>
