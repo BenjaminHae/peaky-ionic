@@ -126,17 +126,21 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
         { status && status.state_no < 5 &&
           <Progress status={status}/>
         }
+        { dimensions && 
+          <div
+            style={{display: selectedArea == 'silhouette' ? 'block' : 'none'}}
+          >
+            <PeakZoom 
+              dimensions={dimensions} 
+              canvasDrawer={callCanvasDrawer} 
+              existingCanvasDrawer={callExistingCanvasDrawer} 
+              peaks={peaks}
+              selectedPeak={selectedPeak} 
+              unselectPeak={() => {peak_selector(undefined)}}
+            /> 
+          </div>}
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
         { selectedArea == 'map' && peaks.length > 0 && <PeakMap /> }
-        { selectedArea == 'silhouette' && dimensions && 
-          <PeakZoom 
-            dimensions={dimensions} 
-            canvasDrawer={callCanvasDrawer} 
-            existingCanvasDrawer={callExistingCanvasDrawer} 
-            peaks={peaks}
-            selectedPeak={selectedPeak} 
-            unselectPeak={() => {peak_selector(undefined)}}
-          /> }
       </div>
     </>
   );
