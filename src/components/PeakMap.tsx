@@ -1,30 +1,53 @@
-import './PeakLabel.css';
-import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import './PeakMap.css';
+import { TileLayer, useMap, Marker, Popup, CircleMarker } from 'react-leaflet'
+import Peaky, { type GeoLocation, type PeakWithDistance } from '@benjaminhae/peaky';
+import { useEffect, useMemo } from 'react';
 import {
   useIonViewDidEnter,
 } from '@ionic/react';
 
-interface PeakMapProps { 
- /* name: string;
-  elevation: string;*/
+export interface PeakMapProps { 
+  name: string;
+  lat: number;
+  lon: number;
+  peaks: Array<PeakWithDistance>;
+  selectedPeak?: PeakWithDistance;
 }
 const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
+  const map = useMap();
   useIonViewDidEnter(() => {
     window.dispatchEvent(new Event('resize'));
+    map.invalidateSize();
   });
+  useEffect(()=>{
+    setTimeout(()=>{map.invalidateSize();}, 500);
+  }, [map]);
+  
+  const peakItems = useMemo(()=>{
+    return props.peaks.map(
+     (peak, index) => 
+        <Marker position={[peak.location.lat, peak.location.lon]} key={`peak-${index}`} >
+          <Popup>
+           {peak.name} {peak.elevation.toFixed(0)} m
+          </Popup>
+        </Marker>
+         )
+     }
+     , [props.peaks]);
+
   return (
-    <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={false}>
+    <>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[51.505, -0.09]}>
+      <CircleMarker center={[props.lat, props.lon]}>
         <Popup>
           A pretty CSS3 popup. <br /> Easily customizable.
         </Popup>
-      </Marker>
-    </MapContainer>
+      </CircleMarker>
+        {peakItems}
+    </>
   );
 };
 

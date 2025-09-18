@@ -1,7 +1,7 @@
 import './Peaks.css';
 import PeakZoom from './PeakZoom';
 import PeakList from './PeakList';
-import PeakMap from './PeakMap';
+import PeakMapContainer from './PeakMapContainer';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
@@ -140,7 +140,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             /> 
           </div>}
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
-        { selectedArea == 'map' && peaks.length > 0 && <PeakMap /> }
+        { selectedArea == 'map' && peaks.length > 0 && <PeakMapContainer peaks={peaks} lat={location.coords.lat} lon={location.coords.lon}/> }
       </div>
     </>
   );

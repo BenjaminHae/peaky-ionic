@@ -3,7 +3,7 @@ import { TransformComponent, ReactZoomPanPinchRef, useTransformContext, KeepScal
 import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useEffect } from 'react';
 import { PluginListenerHandle } from '@capacitor/core';
 import { Motion } from '@capacitor/motion';
-import Peaky, { type GeoLocation, projected_height, type PeakWithDistance } from '@benjaminhae/peaky';
+import { type GeoLocation, projected_height, type PeakWithDistance } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
 import PeakLabel from './PeakLabel';
 import PeakArrow from './PeakArrow';
