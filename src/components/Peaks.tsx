@@ -140,7 +140,15 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             /> 
           </div>}
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
-        { selectedArea == 'map' && peaks.length > 0 && <PeakMapContainer peaks={peaks} lat={location.coords.lat} lon={location.coords.lon}/> }
+        { selectedArea == 'map' && peaks.length > 0 && 
+          <PeakMapContainer 
+            peaks={peaks} 
+            lat={location.coords.lat} 
+            lon={location.coords.lon}
+            selectedPeak={selectedPeak} 
+            peak_selector={peak_selector}
+          /> 
+        }
       </div>
     </>
   );
