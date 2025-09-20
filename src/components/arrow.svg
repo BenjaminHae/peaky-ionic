@@ -1,3 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="500" version="1.0">
+  <style>
+    @media (prefers-color-scheme: dark) {
+            path { fill: white; }
+        }
+  </style>
   <path fill-rule="evenodd" d="M250 500 0 250 250 0h125L175 200h425v100H175l200 200z"/>
 </svg>
