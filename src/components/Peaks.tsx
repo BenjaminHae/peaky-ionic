@@ -58,8 +58,8 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
      callInit();
   }, [peakyWorker, location]);
 
-  const callCanvasDrawer = (canvas: OffscreenCanvas) => peakyWorker.drawToCanvas(canvas);
-  const callExistingCanvasDrawer = (id: string) => peakyWorker.drawToCanvasId(id);
+  const callCanvasDrawer = (canvas: OffscreenCanvas, darkMode: boolean) => peakyWorker.drawToCanvas(canvas, darkMode);
+  const callExistingCanvasDrawer = (id: string, darkMode: boolean) => peakyWorker.drawToCanvasId(id, darkMode);
 
   const requestPermission = async () => {
     try {

@@ -22,6 +22,7 @@ self.fetch = new Proxy(self.fetch, {
 
 const canvasWaiter = new Set<string>([]);
 const canvasStorage: { [id: string]: OffscreenCanvas } = {};
+const canvasDarkModeInfo: { [id: string]: boolean } = {};
 let calculating_location: GeoLocation;
 let calculating_elevation: number;
 let peaky: Peaky | undefined;
@@ -39,7 +40,10 @@ const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
     canvasWaiter.forEach( (id) => {
       const canvas = canvasStorage[id];
-      const options = {horizon_offset: 0}
+      const options = {horizon_offset: 0, paint_direction: false}
+      if (canvasDarkModeInfo[id]) {
+        options.colors = { color_drawing:"white", color_background:"black" }
+      }
       self.requestAnimationFrame(()=>{ 
         peaky?.drawView(canvas, false, options); 
       });
@@ -51,7 +55,8 @@ const handleCanvasWaiter = () => {
     canvasWaiter.clear();
   }
 }
-const drawToCanvasId = (id: string) => {
+const drawToCanvasId = (id: string, darkMode: boolean) => {
+  canvasDarkModeInfo[id] = darkMode;
   canvasWaiter.add(id);
   handleCanvasWaiter();
 }
@@ -136,10 +141,10 @@ self.onmessage = (data: MessageEvent<any>) => {
   }
   else if (data.data.action === "draw") {
     canvasStorage[data.data.id] = data.data.canvas;
-    drawToCanvasId(data.data.id);
+    drawToCanvasId(data.data.id, data.data.darkMode);
   }
   else if (data.data.action === "drawexisting") {
-    drawToCanvasId(data.data.id);
+    drawToCanvasId(data.data.id, data.data.darkMode);
   }
   else if (data.data.action === "fetch") {
     const waiter = fetchWaiter[data.data.id];

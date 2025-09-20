@@ -9,8 +9,8 @@ import { Dimensions } from '../workers/peakyConnectorTypes';
 
 interface PeakZoomProps {
   dimensions: Dimensions;
-  canvasDrawer: (canvas: OffscreenCanvas) => string;
-  existingCanvasDrawer: (canvas: string) => void;
+  canvasDrawer: (canvas: OffscreenCanvas, darkMode: boolean) => string;
+  existingCanvasDrawer: (canvas: string, darkMode: boolean) => void;
   peaks: Array<PeakWithDistance>;
   selectedPeak?: PeakWithDistance;
 }

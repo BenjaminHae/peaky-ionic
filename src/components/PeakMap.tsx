@@ -1,6 +1,6 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerIconSelected from "../../public/marker-icon-black.png";
+import markerIconSelected from "../marker-icon-black.png";
 import { TileLayer, useMap, Marker, Popup, CircleMarker } from 'react-leaflet'
 import { IonButton } from '@ionic/react';
 import { IonIcon } from '@ionic/react';

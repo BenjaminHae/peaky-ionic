@@ -16,8 +16,8 @@ const MAGIC_CIRCLE_SCALE = 2;
 interface ContainerProps { 
   transformer: ReactZoomPanPinchRef;
   location?: {coords: GeoLocation, elevation: number|null};
-  canvasDrawer: (canvas: OffscreenCanvas) => string;
-  existingCanvasDrawer: (canvas: string) => void;
+  canvasDrawer: (canvas: OffscreenCanvas, darkMode: boolean) => string;
+  existingCanvasDrawer: (canvas: string, darkMode: boolean) => void;
   peaks: Array<PeakWithDistance>;
   dimensions: Dimensions;
   selectedPeak?: PeakWithDistance;
@@ -133,14 +133,15 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       }
     }
   }, [canvasRef3.current]);
+  const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   useEffect(()=> {
     if (canvasRef.current && offscreen) {
-      const newId = props.canvasDrawer(offscreen);
+      const newId = props.canvasDrawer(offscreen, darkMode);
       if (newId !== "") {
         setOffscreenId(newId);
       }
       else if (offscreenId !== "") {
-        props.existingCanvasDrawer(offscreenId);
+        props.existingCanvasDrawer(offscreenId, darkMode);
       }
       let scale = 0.1;
       if (containerRef.current) {
@@ -155,27 +156,34 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   }, [offscreen]);
   useEffect(()=> {
     if (offscreen2) {
-      const newId = props.canvasDrawer(offscreen2);
+      const newId = props.canvasDrawer(offscreen2, darkMode);
       if (newId !== "") {
         setOffscreenId2(newId);
       }
       else if (offscreenId !== "") {
-        props.existingCanvasDrawer(offscreenId2);
+        props.existingCanvasDrawer(offscreenId2, darkMode);
       }
     }
   }, [offscreen2]);
   useEffect(()=> {
     if (offscreen3) {
-      const newId = props.canvasDrawer(offscreen3);
+      const newId = props.canvasDrawer(offscreen3, darkMode);
       if (newId !== "") {
         setOffscreenId3(newId);
       }
       else if (offscreenId !== "") {
-        props.existingCanvasDrawer(offscreenId3);
+        props.existingCanvasDrawer(offscreenId3, darkMode);
       }
     }
   }, [offscreen3]);
 
+  const directions = ["N","O","S","W"].map((dir, index) => {
+      return [-1,0,1].map((canvasId) => {
+        return (<div key={`key-${index}-${canvasId}`} style={{position:"absolute", bottom:0, left: 2*(canWidth/4 * index + canvasId * canWidth), height:"100%", width:"1px", borderLeft: "5px solid light-dark(grey, white)", fontSize: "5em"}}><KeepScale>{dir}</KeepScale>
+          </div>)
+      });
+    });
+  
   return (
         <TransformComponent>
           <div className="fullSize" ref={containerRef}>
@@ -183,6 +191,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
               <canvas className="canvas" ref={canvasRef2} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `-${canWidth*2}px`, top: '0px'}}/>
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               <canvas className="canvas" ref={canvasRef3} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `${canWidth*2}px`, top: '0px'}}/>
+              {directions}
               {peakItems}
               { props.selectedPeak && 
                 <PeakArrow 

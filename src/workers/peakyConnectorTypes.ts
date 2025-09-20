@@ -9,11 +9,13 @@ interface PeakyWorkerMessageDraw {
   action: "draw";
   canvas: OffscreenCanvas;
   id: string;
+  darkMode: boolean;
 }
 
 interface PeakyWorkerMessageDrawExisting {
   action: "drawexisting";
   id: string;
+  darkMode: boolean;
 }
 
 interface PeakyWorkerMessagePeaks {

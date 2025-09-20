@@ -90,10 +90,10 @@ export default class PeakyWorkerConnector {
     })
   }
 
-  drawToCanvas(offscreen: OffscreenCanvas): string {
+  drawToCanvas(offscreen: OffscreenCanvas, darkMode: boolean): string {
     try {
       const id = Math.random().toString(36).slice(2);
-      this.worker.postMessage({action: "draw", canvas: offscreen, id:id}, [offscreen]);
+      this.worker.postMessage({action: "draw", canvas: offscreen, id:id, darkMode: darkMode}, [offscreen]);
       return id;
     } catch(e) {
       console.log(e);
@@ -101,8 +101,8 @@ export default class PeakyWorkerConnector {
     }
   }
 
-  drawToCanvasId(id: string): void {
-    this.worker.postMessage({action: "drawexisting", id:id});
+  drawToCanvasId(id: string, darkMode: boolean): void {
+    this.worker.postMessage({action: "drawexisting", id:id, darkMode: darkMode});
   }
 
   getPeaks(): Promise<Array<PeakWithDistance>> {
