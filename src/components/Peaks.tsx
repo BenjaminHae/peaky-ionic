@@ -9,7 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
-import { IonToolbar, IonButton, IonButtons, IonIcon  } from '@ionic/react';
+import { IonToolbar, IonButton, IonButtons, IonIcon, IonContent, IonHeader } from '@ionic/react';
 import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/icons';
 
 interface PeaksProps { 
@@ -113,15 +113,17 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
 
   return (
     <>
-      <IonToolbar>
-        <p>
-          { location ? <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> : <span>Waiting for location ...</span>}
-        </p>
-        <IonButtons slot="end">
-          { selectorButtons }
-        </IonButtons>
-      </IonToolbar>
-      <div id="container">
+      <IonHeader>
+        <IonToolbar>
+          <p>
+            { location ? <span> {location.coords.lat}, {location.coords.lon}{location.elevation && ", "+location.elevation.toFixed(0)+" m" }</span> : <span>Waiting for location ...</span>}
+          </p>
+          <IonButtons slot="end">
+            { selectorButtons }
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent id="container">
         { !orientationAllowed && <p><strong><button onClick={requestPermission}>Allow Location access</button></strong></p> }
         { status && status.state_no < 5 &&
           <Progress status={status}/>
@@ -149,7 +151,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             peak_selector={peak_selector}
           /> 
         }
-      </div>
+      </IonContent>
     </>
   );
 };

@@ -7,9 +7,7 @@ import './Home.css';
 const Home: React.FC = () => {
   return (
     <IonPage>
-      <IonContent>
-        <Peaks/>
-      </IonContent>
+      <Peaks/>
     </IonPage>
   );
 };
