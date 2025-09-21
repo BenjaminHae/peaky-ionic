@@ -65,8 +65,9 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
       <div id="direction">{direction.toFixed(0)}°</div>
       <TransformWrapper 
           initialScale={1} 
-          minScale={0.1}
+          minScale={1}
           maxScale={20}
+          limitToBounds={false}
           ref={transformComponentRef} 
           onPanningStart={movingStart} 
           onPinchingStart={movingStart}

@@ -1,5 +1,5 @@
 #direction {
-  position: fixed;
+  position: absolute;
   top: 2em;
   right: 0;
   font-size: 2em;
