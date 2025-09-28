@@ -42,6 +42,13 @@ interface PeakyWorkerResponseRidges {
   dimensions: Dimensions;
 }
 
+interface PeakyWorkerResponseError {
+  action: "error";
+  status?: Status;
+  error: string;
+  msg: string;
+}
+
 interface PeakyWorkerResponsePeaks {
   action: "peaks";
   peaks: Array<PeakWithDistance>;

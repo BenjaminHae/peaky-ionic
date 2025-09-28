@@ -9,7 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
-import { IonToolbar, IonButton, IonButtons, IonIcon, IonContent, IonHeader } from '@ionic/react';
+import { IonToolbar, IonButton, IonButtons, IonIcon, IonContent, IonHeader, useIonAlert } from '@ionic/react';
 import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/icons';
 
 interface PeaksProps { 
@@ -33,6 +33,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const areaSelector = (items: Array<string>) => {
     setSelectItems(items.map((item) => [item, possibleSelectItems[item]]));
   }; 
+  const [presentAlert] = useIonAlert();
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
  
@@ -47,6 +48,12 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
            (options as any).provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
          }
          peakyWorker.subscribeStatus((s) => setStatus(s));
+         peakyWorker.subscribeError((name, msg) => presentAlert({
+          header: 'Fehler',
+          subHeader: name,
+          message: msg,
+          buttons: ['Ok'],
+        }));
          await peakyWorker.init(location.coords, options);
          const _dimensions = await peakyWorker.getDimensions();
          setDimensions(_dimensions);
@@ -77,16 +84,17 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
       setLocationAllowed(true);
       const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true});
 
-      // for debugging purposes use a static location for web
-      if (Capacitor.getPlatform() == 'web') {
-        const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
-        setLocation({coords: new GeoLocation(location[0], location[1])});
-      }
-      else {
+      if (Capacitor.getPlatform() !== 'web') {
         setLocation({coords: new GeoLocation(location.coords.latitude, location.coords.longitude), elevation: location.coords.altitude});
       }
     } catch (e){
       console.log(e);
+    }
+    // for debugging purposes use a static location for web
+    if (Capacitor.getPlatform() == 'web') {
+      //const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
+      const location = [ 49.2319, 6.9976 ];//St. Gallenkirch
+      setLocation({coords: new GeoLocation(location[0], location[1])});
     }
   }
 

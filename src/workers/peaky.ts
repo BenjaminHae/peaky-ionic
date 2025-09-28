@@ -132,12 +132,25 @@ class FakeResponseObject {
   }
 }
 
+const callFunctionErrorHandled = async (func: ()=> void) => {
+  try {
+    await func();
+  } catch (e) {
+    self.postMessage({action: "error", error: e.name, msg: e.message});
+    throw e;
+  }
+}
+
 self.onmessage = (data: MessageEvent<any>) => {
   if (data.data.action === "init") {
-    doRidgeCalculation(data.data.data.location, data.data.data.options);
+    callFunctionErrorHandled(
+      ()=> doRidgeCalculation(data.data.data.location, data.data.data.options)
+    );
   }
   else if (data.data.action === "peaks") {
-    doPeaksCalculation();
+    callFunctionErrorHandled(
+      ()=> doPeaksCalculation()
+    );
   }
   else if (data.data.action === "draw") {
     canvasStorage[data.data.id] = data.data.canvas;

@@ -8,6 +8,7 @@ export default class PeakyWorkerConnector {
   peakWaiter: Array<(peaks: Array<PeakWithDistance>) => void> = [];
   ridgeWaiter: Array<(dim: Dimensions) => void> = [];
   statusListener: Array<(status: Status) => void> = [];
+  errorListener: Array<(name: string, msg: string) => void> = [];
   dimensions?: Dimensions;
   peaks?: Array<PeakWithDistance>;
   hasPeaks: boolean = false;
@@ -40,6 +41,9 @@ export default class PeakyWorkerConnector {
     else if (data.action == "fetch") {
       this.handleFetch(data.id, data.args);
     }
+    else if (data.action == "error") {
+      this.callErrorListener(data);
+    }
   }
 
   handleFetch(id: string, args: Array<any>) {
@@ -55,6 +59,10 @@ export default class PeakyWorkerConnector {
 
   callStatusListener(status: Status) {
     this.statusListener.forEach((l) => new Promise<void>((r)=>{l(status); r()}));
+  }
+
+  callErrorListener(data) {
+    this.errorListener.forEach((l) => new Promise<void>((r)=>{l(data.name, data.msg); r()}));
   }
 
   callPeaksWaiter(peaks: Array<PeakWithDistance>) {
@@ -117,5 +125,9 @@ export default class PeakyWorkerConnector {
 
   subscribeStatus(listener: (status: Status) => void) {
     this.statusListener.push(listener);
+  }
+
+  subscribeError(listener: (name: string, msg: string) => void) {
+    this.errorListener.push(listener);
   }
 }
