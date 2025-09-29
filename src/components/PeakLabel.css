@@ -5,7 +5,7 @@
   transform: rotate(-60deg) translate(+0.2em, -1.0em);
   white-space: nowrap;
   overflow-x: visible;
-  background-color: light-dark(white, black);
+  background-color: light-dark(white, #121212);
 }
 .peakStroke {
   border-left: 1px solid light-dark(black, white);

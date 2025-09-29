@@ -42,7 +42,7 @@ const handleCanvasWaiter = () => {
       const canvas = canvasStorage[id];
       const options = {horizon_offset: 0, paint_direction: false}
       if (canvasDarkModeInfo[id]) {
-        options.colors = { color_drawing:"white", color_background:"black" }
+        options.colors = { color_drawing:"white", color_background:"#121212" }
       }
       self.requestAnimationFrame(()=>{ 
         peaky?.drawView(canvas, false, options); 

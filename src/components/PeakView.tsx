@@ -179,7 +179,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
 
   const directions = ["N","O","S","W"].map((dir, index) => {
       return [-1,0,1].map((canvasId) => {
-        return (<div key={`key-${index}-${canvasId}`} style={{position:"absolute", bottom:0, left: 2*(canWidth/4 * index + canvasId * canWidth), height:"100%", width:"1px", borderLeft: "5px solid light-dark(grey, white)", fontSize: "5em"}}><KeepScale>{dir}</KeepScale>
+        return (<div key={`key-${index}-${canvasId}`} style={{position:"absolute", bottom:0, left: 2*(canWidth/4 * index + canvasId * canWidth), height:"100%", width:"1px", borderLeft: "5px solid light-dark(grey, white)", fontSize: "5em"}}>
+                 <KeepScale>{dir}</KeepScale>
           </div>)
       });
     });
