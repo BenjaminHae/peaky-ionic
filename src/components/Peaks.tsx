@@ -92,8 +92,8 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
     }
     // for debugging purposes use a static location for web
     if (Capacitor.getPlatform() == 'web') {
-      //const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
-      const location = [ 49.2319, 6.9976 ];//St. Gallenkirch
+      const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
+      //const location = [ 49.2319, 6.9976 ];//St. Gallenkirch
       setLocation({coords: new GeoLocation(location[0], location[1])});
     }
   }
@@ -138,7 +138,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
         }
         { dimensions && 
           <div
-            style={{display: selectedArea == 'silhouette' ? 'block' : 'none'}}
+            style={{display: selectedArea == 'silhouette' ? 'block' : 'none', height:"100%"}}
           >
             <PeakZoom 
               dimensions={dimensions} 

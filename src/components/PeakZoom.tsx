@@ -61,7 +61,7 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
   }
 
   return (
-    <div>
+    <div style={{height: "100%", overflow: "hidden"}}>
       <div id="direction">{direction.toFixed(0)}°</div>
       <TransformWrapper 
           initialScale={1} 
