@@ -60,9 +60,13 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
     setDirectionsDisabled(false);
   }
 
+  const resetOffset = () => {
+    peakViewRef.current?.resetOffset();
+  }
+
   return (
     <div style={{height: "100%", overflow: "hidden"}}>
-      <div id="direction">{direction.toFixed(0)}°</div>
+      <div id="direction" onClick={resetOffset}>{direction.toFixed(0)}°</div>
       <TransformWrapper 
           initialScale={1} 
           minScale={1}

@@ -25,6 +25,7 @@ interface ContainerProps {
 export interface PeakViewRef {
   zoomToDirection: (direction: number, fast?: boolean) => void;
   writeOffset: (offset: number) => void;
+  resetOffset: () => void;
 };
 
 function getWindowDimensions() {
@@ -74,6 +75,9 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     },
     writeOffset: (offset: number) => {
       writeOffset(offset);
+    },
+    resetOffset: () => {
+      setOffset(0);
     }
   }));
   // get screen size
