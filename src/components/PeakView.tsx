@@ -192,7 +192,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
                      height:"100%", 
                      width:"1px", 
                      borderLeftWidth: `${dir==="N" || dir === "S" ? "10" : "5"}px`,
-                     borderLeftStyle: `solid`,
+                     borderLeftStyle: dir==="N" ? "solid" : "dashed",
                      borderLeftColor: `${dir==="N" ? "red" : "light-dark(grey, white)"}`, 
                      fontSize: "5em"
                }}>
