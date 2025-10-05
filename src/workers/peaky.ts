@@ -40,9 +40,9 @@ const handleCanvasWaiter = () => {
   if (ridgesPresent && peaky) {
     canvasWaiter.forEach( (id) => {
       const canvas = canvasStorage[id];
-      const options = {horizon_offset: 0, paint_direction: false}
+      const options = {horizon_offset: 0, paint_direction: false, colors: {color_ridge_near: "#000000", color_ridge_far: "#bbbbbb"}}
       if (canvasDarkModeInfo[id]) {
-        options.colors = { color_drawing:"white", color_background:"#121212" }
+        options.colors = { color_drawing:"white", color_background:"#121212", color_ridge_near: "#ffffff", color_ridge_far: "#333333" }
       }
       self.requestAnimationFrame(()=>{ 
         peaky?.drawView(canvas, false, options); 
