@@ -35,7 +35,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   }; 
   const [presentAlert] = useIonAlert();
 
-  const peakyWorker = useMemo(() => new PeakyWorkerConnector(), []);
+  const peakyWorker = useMemo(() => new PeakyWorkerConnector(), [location]);
  
   useMemo(
    () => {
@@ -157,6 +157,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             lon={location.coords.lon}
             selectedPeak={selectedPeak} 
             peak_selector={peak_selector}
+            set_location={(lat, lon: number) => {console.log(lat, lon); setLocation({coords: new GeoLocation(lat, lon)})}}
           /> 
         }
       </IonContent>

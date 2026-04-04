@@ -1,13 +1,13 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "../marker-icon-black.png";
-import { TileLayer, useMap, Marker, Popup, CircleMarker } from 'react-leaflet'
+import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker } from 'react-leaflet'
 import { IonButton } from '@ionic/react';
 import { IonIcon } from '@ionic/react';
 import { navigateCircleOutline } from 'ionicons/icons';
 import { Icon } from 'leaflet';
-import Peaky, { type GeoLocation, type PeakWithDistance } from '@benjaminhae/peaky';
-import { useEffect, useMemo } from 'react';
+import Peaky, { type PeakWithDistance } from '@benjaminhae/peaky';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useIonViewDidEnter,
 } from '@ionic/react';
@@ -20,6 +20,7 @@ export interface PeakMapProps {
   peaks: Array<PeakWithDistance>;
   peak_selector: (peak: PeakWithDistance, display:'map'|'silhouette') => void;
   selectedPeak?: PeakWithDistance;
+  set_location: (lat: number, lon: number) => void;
 }
 const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const map = useMap();
@@ -30,6 +31,13 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   useEffect(()=>{
     setTimeout(()=>{map.invalidateSize();}, 500);
   }, [map]);
+  const [selectLocation, setSelectLocation] = useState<{lat, lng: number}|null>(null);
+  const map_events = useMapEvents({
+    click(e) {
+      console.log(e.latlng.lat, e.latlng.lng);
+      setSelectLocation({lat: e.latlng.lat, lng: e.latlng.lng})
+    }
+  })
   
   const peakItems = useMemo(()=>{
     const icon = new Icon({iconUrl: markerIcon, iconSize: [25,41], iconAnchor: [12,41]});
@@ -56,6 +64,19 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      { selectLocation !== null &&
+        <Popup position={[selectLocation.lat, selectLocation.lng]}>
+          <strong>Show peaks for this location?</strong> 
+          <p>{selectLocation.lat}, {selectLocation.lng}</p>
+          <IonButton 
+            onClick={()=>{
+              props.set_location(selectLocation.lat, selectLocation.lng);
+              setSelectLocation(null);
+            }}>
+            <IonIcon icon={navigateCircleOutline}></IonIcon>
+          </IonButton>
+        </Popup>
+      }
       <CircleMarker center={[props.lat, props.lon]}>
       </CircleMarker>
         {peakItems}
