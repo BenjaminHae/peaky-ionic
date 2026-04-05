@@ -86,6 +86,8 @@ export default class PeakyWorkerConnector {
   // call with elevation as option
   async init(location: GeoLocation, options: PeakyOptions = {}) {
     // now doing everything in the background (all data should be present already)
+    this.hasPeaks = false;
+    this.peaks = [];
     this.worker.postMessage({action: "init", data: {location: location, options: options}});
   }
 

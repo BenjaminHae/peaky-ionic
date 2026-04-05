@@ -76,6 +76,7 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   location = new GeoLocation(location.lat, location.lon);
   calculating_location = location;
   calculating_elevation = options.elevation;
+  ridgesPresent = false;
   started_calculating_peaks = false;
   finished_calculating_peaks = false;
  
