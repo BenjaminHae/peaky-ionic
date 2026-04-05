@@ -18,7 +18,7 @@ export interface PeakMapProps {
   lat: number;
   lon: number;
   peaks: Array<PeakWithDistance>;
-  peak_selector: (peak: PeakWithDistance, display:'map'|'silhouette') => void;
+  peak_selector: (peak: PeakWithDistance | null, display:'map'|'silhouette') => void;
   selectedPeak?: PeakWithDistance;
   set_location: (lat: number, lon: number) => void;
 }
@@ -70,8 +70,11 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
           <p>{selectLocation.lat}, {selectLocation.lng}</p>
           <IonButton 
             onClick={()=>{
-              props.set_location(selectLocation.lat, selectLocation.lng);
-              setSelectLocation(null);
+              const lat = selectLocation.lat
+              const lng = selectLocation.lng
+              setSelectLocation(null)
+              props.peak_selector(null, 'silhouette')
+              props.set_location(lat, lng);
             }}>
             <IonIcon icon={navigateCircleOutline}></IonIcon>
           </IonButton>

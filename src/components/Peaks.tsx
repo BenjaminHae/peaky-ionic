@@ -35,7 +35,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   }; 
   const [presentAlert] = useIonAlert();
 
-  const peakyWorker = useMemo(() => new PeakyWorkerConnector(), [location]);
+  const peakyWorker = useMemo(() => new PeakyWorkerConnector(), [/*location*/]);
  
   useMemo(
    () => {
@@ -106,9 +106,11 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   }
 
   
-  const peak_selector = (peak: PeakWithDistance, display?:'map'|'silhouette') => {
-    setSelectedPeak(peak);
-    if (peak && display) {
+  const peak_selector = (peak: PeakWithDistance | null, display?:'map'|'silhouette') => {
+    if (peak) {
+      setSelectedPeak(peak);
+    }
+    if (display) {
       setSelectedArea(display);
     }
   };
@@ -147,6 +149,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
               peaks={peaks}
               selectedPeak={selectedPeak} 
               unselectPeak={() => {peak_selector(undefined)}}
+              location={location.coords}
             /> 
           </div>}
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
