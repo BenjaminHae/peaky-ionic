@@ -87,7 +87,8 @@ export default class PeakyWorkerConnector {
   async init(location: GeoLocation, options: PeakyOptions = {}) {
     // now doing everything in the background (all data should be present already)
     this.hasPeaks = false;
-    this.peaks = [];
+    delete this.peaks;
+    delete this.dimensions;
     this.worker.postMessage({action: "init", data: {location: location, options: options}});
   }
 
@@ -119,10 +120,11 @@ export default class PeakyWorkerConnector {
     if (this.hasPeaks && this.peaks) {
       return Promise.resolve(this.peaks);
     }
-    this.worker.postMessage({action: "peaks"});
-    return new Promise<Array<PeakWithDistance>>((resolve) => {
+    const promise = new Promise<Array<PeakWithDistance>>((resolve) => {
       this.peakWaiter.push(resolve);
     })
+    this.worker.postMessage({action: "peaks"});
+    return promise;
   }
 
   subscribeStatus(listener: (status: Status) => void) {
