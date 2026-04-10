@@ -11,6 +11,7 @@ import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
 import { IonToolbar, IonButton, IonButtons, IonIcon, IonContent, IonHeader, useIonAlert } from '@ionic/react';
 import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/icons';
+import { tryAcquire, Mutex } from 'async-mutex';
 
 interface PeaksProps { 
   selected_area: string;
@@ -25,6 +26,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const [dimensions, setDimensions] = useState<Dimensions|null>(null);
   const [peaks, setPeaks] = useState<Array<PeakWithDistance>>([]);
   const [status, setStatus] = useState<Status>();
+  const [peakIteration, setPeakIteration] = useState<number>(0);
   const [selectedPeak, setSelectedPeak] = useState<PeakWithDistance|undefined>();
 
   const [selectedArea, setSelectedArea] = useState<string>('silhouette');
@@ -36,33 +38,37 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const [presentAlert] = useIonAlert();
 
   const peakyWorker = useMemo(() => new PeakyWorkerConnector(), [/*location*/]);
+
+  const mutex = useRef(new Mutex());
  
   useMemo(
    () => {
      const callInit = async () => {
-       if (location) {
-         const options = {};
-         if (location.elevation !== null) 
-         (options as any).elevation = location.elevation;
-         if (Capacitor.getPlatform() == 'web') {
-           (options as any).provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
-         }
-         peakyWorker.subscribeStatus((s) => setStatus(s));
-         peakyWorker.subscribeError((name, msg) => presentAlert({
+      if (location) {
+        const options = {};
+        if (location.elevation !== null) 
+          (options as any).elevation = location.elevation;
+        if (Capacitor.getPlatform() == 'web') {
+          (options as any).provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
+        }
+        peakyWorker.subscribeStatus((s) => setStatus(s));
+        peakyWorker.subscribeError((name, msg) => presentAlert({
           header: 'Fehler',
           subHeader: name,
           message: msg,
           buttons: ['Ok'],
         }));
-         await peakyWorker.init(location.coords, options);
-         const _dimensions = await peakyWorker.getDimensions();
-         setDimensions(_dimensions);
-         areaSelector(['silhouette']);
-         setPeaks(await peakyWorker.getPeaks());
-         areaSelector(['silhouette', 'map', 'list']);
-       }
-     }
-     callInit();
+        await peakyWorker.init(location.coords, options);
+        const _dimensions = await peakyWorker.getDimensions();
+        setDimensions(_dimensions);
+        setPeakIteration((n)=>n+1)
+        areaSelector(['silhouette']);
+        const peaks = await peakyWorker.getPeaks();
+        setPeaks(peaks);
+        areaSelector(['silhouette', 'map', 'list']);
+      }
+    }
+    tryAcquire(mutex.current).runExclusive(callInit);
   }, [peakyWorker, location]);
 
   const callCanvasDrawer = (canvas: OffscreenCanvas, darkMode: boolean) => peakyWorker.drawToCanvas(canvas, darkMode);
@@ -150,6 +156,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
               selectedPeak={selectedPeak} 
               unselectPeak={() => {peak_selector(undefined)}}
               location={location.coords}
+              peakIteration={peakIteration}
             /> 
           </div>}
         { selectedArea == 'list' && peaks.length > 0 && <PeakList peaks={peaks} peak_selector={peak_selector}/>}
