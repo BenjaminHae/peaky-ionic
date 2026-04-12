@@ -66,6 +66,12 @@ export default class SrtmStorage {
   async remove(tile: string): Promise<void> {
     return await Filesystem.deleteFile(this.filenameToOptions(tile));
   }
+
+  async getAvailableTiles(): Promise<Array<string>> {
+    const files = await Filesystem.readdir({directory:Directory.Data, path: ''})
+    const names = files.files.map((fileInfo:FileInfo) => fileInfo.name);
+    return names
+  }
 }
 function _arrayBufferToBase64( buffer: ArrayBuffer ): string {
   const bytes = new Uint8Array( buffer );

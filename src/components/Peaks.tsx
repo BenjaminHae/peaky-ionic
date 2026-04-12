@@ -2,6 +2,7 @@ import './Peaks.css';
 import PeakZoom from './PeakZoom';
 import PeakList from './PeakList';
 import PeakMapContainer from './PeakMapContainer';
+import ManageTiles from './Settings/ManageTiles';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
@@ -10,7 +11,7 @@ import PeakyWorkerConnector from '../workers/peakyWorkerConnector';
 import { Dimensions, Status } from '../workers/peakyConnectorTypes';
 import Progress from './Progress';
 import { IonToolbar, IonButton, IonButtons, IonIcon, IonContent, IonHeader, useIonAlert } from '@ionic/react';
-import { mapOutline, navigateCircleOutline, listCircleOutline } from 'ionicons/icons';
+import { mapOutline, navigateCircleOutline, listCircleOutline, settingsOutline } from 'ionicons/icons';
 import { tryAcquire, Mutex } from 'async-mutex';
 
 interface PeaksProps { 
@@ -28,6 +29,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   const [status, setStatus] = useState<Status>();
   const [peakIteration, setPeakIteration] = useState<number>(0);
   const [selectedPeak, setSelectedPeak] = useState<PeakWithDistance|undefined>();
+  const [selectedTiles, setSelectedTiles] = useState<Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>>([]);
 
   const [selectedArea, setSelectedArea] = useState<string>('silhouette');
   const [selectItems, setSelectItems] = useState<Array<string>>([]);
@@ -99,7 +101,6 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
     // for debugging purposes use a static location for web
     if (Capacitor.getPlatform() == 'web') {
       const location = [ 47.020156, 9.978416 ];//St. Gallenkirch
-      //const location = [ 49.2319, 6.9976 ];//St. Gallenkirch
       setLocation({coords: new GeoLocation(location[0], location[1])});
     }
   }
@@ -136,6 +137,10 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
           </p>
           <IonButtons slot="end">
             { selectorButtons }
+            <IonButton onClick={()=>{setSelectedArea('settings')}} fill={selectedArea == 'settings' ? "solid" : "clear"} >
+              <IonIcon slot="icon-only" icon={settingsOutline}></IonIcon>
+            </IonButton>
+         
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -169,6 +174,12 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             peak_selector={peak_selector}
             set_location={(lat, lon: number) => {console.log(lat, lon); setLocation({coords: new GeoLocation(lat, lon)})}}
           /> 
+        }
+        { selectedArea == 'settings' &&
+          <ManageTiles
+            location={location?.coords}
+            showInMap={(areas: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>)=> { setSelectedTiles(areas)}}
+          />
         }
       </IonContent>
     </>
