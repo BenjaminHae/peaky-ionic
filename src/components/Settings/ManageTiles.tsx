@@ -53,7 +53,7 @@ const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
   useMemo(()=> {
       async function loadTiles() {
         console.log('reloading tiles');
-        const tileNames = await storage.getAvailableTiles().filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test());
+        const tileNames = (await storage.getAvailableTiles()).filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test(name));
         const uniq = [... new Set(tileNames.map((name)=> name.replace(/\..*$/,'')))]
         setTiles(uniq);
       }
