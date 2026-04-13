@@ -172,12 +172,13 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             selectedPeak={selectedPeak} 
             peak_selector={peak_selector}
             set_location={(lat, lon: number) => {console.log(lat, lon); setLocation({coords: new GeoLocation(lat, lon)})}}
+            selectedTiles={selectedTiles}
           /> 
         }
         { selectedArea == 'settings' &&
           <ManageTiles
             location={location?.coords}
-            showInMap={(areas: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>)=> { setSelectedTiles(areas)}}
+            showInMap={(areas: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>)=> { setSelectedTiles(areas); setSelectedArea('map');}}
           />
         }
       </IonContent>

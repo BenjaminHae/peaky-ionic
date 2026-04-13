@@ -42,7 +42,7 @@ function getSquareFromTile(tile: string) {
   const lat = parseInt(tile[1] + tile[2]) * (N ? 1 : -1)
   const E = tile[3] === "E";
   const lon = parseInt(tile[4] + tile[5] + tile[6]) * (E ? 1 : -1)
-  return {tile: string, lat: new GeoLocation(lat, lon), lon: new GeoLocation(lat + 1, lon + 1)};
+  return {tile: tile, northWest: new GeoLocation(lat, lon), southEast: new GeoLocation(lat + 1, lon + 1)};
 }
 
 const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
