@@ -90,7 +90,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
         await GeoLocationService.requestPermissions({permissions: ['coarseLocation']});
       }
       setLocationAllowed(true);
-      const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true});
+      const location = await GeoLocationService.getCurrentPosition({enableHighAccuracy: true, enableLocationFallback: true});
 
       if (Capacitor.getPlatform() !== 'web') {
         setLocation({coords: new GeoLocation(location.coords.latitude, location.coords.longitude), elevation: location.coords.altitude});
@@ -179,6 +179,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
           <ManageTiles
             location={location?.coords}
             showInMap={(areas: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>)=> { setSelectedTiles(areas); setSelectedArea('map');}}
+            peakyWorker={peakyWorker}
           />
         }
       </IonContent>
