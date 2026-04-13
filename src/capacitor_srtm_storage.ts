@@ -1,4 +1,4 @@
-import { Filesystem, Directory, type StatOptions, type WriteFileOptions } from '@capacitor/filesystem';
+import { Filesystem, Directory, type FileInfo, type StatOptions, type WriteFileOptions } from '@capacitor/filesystem';
 
 export default class SrtmStorage {
   constructor() {

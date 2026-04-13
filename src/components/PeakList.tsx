@@ -10,7 +10,6 @@ import { mapOutline, navigateCircleOutline } from 'ionicons/icons';
 interface PeakListProps { 
   peaks: Array<PeakWithDistance>;
   peak_selector: (peak: PeakWithDistance, display:'map'|'silhouette') => void;
-  selectedPeak: PeakWithDistance;
 }
 
 const PeakList: React.FC<PeakListProps> = (props:PeakListProps) => {

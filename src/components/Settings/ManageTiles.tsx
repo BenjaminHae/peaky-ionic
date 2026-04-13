@@ -25,7 +25,7 @@ function tileKey(latLng: GeoLocation): string {
   return `${latLng.lat < 0 ? 'S':'N'}${zeroPad(Math.abs(Math.floor(latLng.lat)),2)}${latLng.lon < 0 ? 'W':'E'}${zeroPad(Math.abs(Math.floor(latLng.lon)),3)}`
 }
 
-function formatBytes(bytes, decimals = 2) {
+function formatBytes(bytes: number, decimals: number = 2) {
   if (!+bytes) return '0 Bytes'
 
   const k = 1024
@@ -74,7 +74,7 @@ const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
   const chooseMultiSelected = (event: CheckboxCustomEvent<{ checked: boolean }>) => {
     if (event.detail.checked) {
       setSelected(tiles.reduce(
-        (acc, tile) => {
+        (acc: Record<string, boolean>, tile: string) => {
           acc[tile] = true;
           return acc
         }, {}))

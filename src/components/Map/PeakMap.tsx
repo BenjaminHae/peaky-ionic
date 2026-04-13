@@ -15,7 +15,6 @@ import {
 
 
 export interface PeakMapProps { 
-  name: string;
   lat: number;
   lon: number;
   peaks: Array<PeakWithDistance>;
