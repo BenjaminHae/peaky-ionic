@@ -1,6 +1,6 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerIconSelected from "../marker-icon-black.png";
+import markerIconSelected from "./marker-icon-black.png";
 import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker } from 'react-leaflet'
 import { IonButton } from '@ionic/react';
 import { IonIcon } from '@ionic/react';
@@ -21,6 +21,7 @@ export interface PeakMapProps {
   peak_selector: (peak: PeakWithDistance | null, display:'map'|'silhouette') => void;
   selectedPeak?: PeakWithDistance;
   set_location: (lat: number, lon: number) => void;
+  selectedTiles: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>;
 }
 const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const map = useMap();

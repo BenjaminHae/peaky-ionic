@@ -1,7 +1,7 @@
 import './Peaks.css';
 import PeakZoom from './Silhouette/PeakZoom';
 import PeakList from './PeakList';
-import PeakMapContainer from './PeakMapContainer';
+import PeakMapContainer from './Map/PeakMapContainer';
 import ManageTiles from './Settings/ManageTiles';
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { GeoLocation, PeakWithDistance } from '@benjaminhae/peaky';
@@ -140,7 +140,6 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             <IonButton onClick={()=>{setSelectedArea('settings')}} fill={selectedArea == 'settings' ? "solid" : "clear"} >
               <IonIcon slot="icon-only" icon={settingsOutline}></IonIcon>
             </IonButton>
-         
           </IonButtons>
         </IonToolbar>
       </IonHeader>
