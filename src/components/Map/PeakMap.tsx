@@ -1,7 +1,7 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
-import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker, Rectangle, LayersControl, FeatureGroup } from 'react-leaflet'
+import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
 import { IonButton } from '@ionic/react';
 import { IonIcon } from '@ionic/react';
 import { navigateCircleOutline } from 'ionicons/icons';
@@ -62,7 +62,13 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const tileRectangles = useMemo(()=>{
     if (props.selectedTiles?.length > 0) {
       const tiles = props.selectedTiles.map((tile, index) => {
-        return <Rectangle key={index} bounds={[[tile.northWest.lat, tile.northWest.lon], [tile.southEast.lat, tile.southEast.lon]]} />
+        return <div key={index}>
+          <Rectangle bounds={[[tile.northWest.lat, tile.northWest.lon], [tile.southEast.lat, tile.southEast.lon]]}>
+            <Tooltip direction="center" offset={[0.5, 0.5]} opacity={1} permanent onClick={()=>{console.log("hi")}}>
+                    {tile.tile}
+            </Tooltip>
+          </Rectangle>
+       </div>
       })
       return <FeatureGroup pathOptions={{ color: 'purple' }}>
               {tiles}
