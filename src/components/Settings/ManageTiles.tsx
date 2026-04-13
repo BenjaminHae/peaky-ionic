@@ -7,10 +7,12 @@ import { IonButton, IonButtons, IonCheckbox, IonListHeader, CheckboxCustomEvent 
 import { IonIcon } from '@ionic/react';
 import { informationCircle } from 'ionicons/icons';
 import { mapOutline, navigateCircle, trashBinOutline } from 'ionicons/icons';
+import PeakyWorkerConnector from '../../workers/peakyWorkerConnector';
 
 interface ManageTilesProps {
   showInMap: (areas: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>) => void;
   location?: GeoLocation;
+  peakyWorker: PeakyWorkerConnector;
 }
 
 const zeroPad = function(v: number, l: number) {
@@ -46,19 +48,19 @@ function getSquareFromTile(tile: string) {
 }
 
 const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
-  const storage = useMemo(() => new SrtmStorage(), []);
   const [tiles, setTiles] = useState<Array<string>>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [changeSet, setChangeSet] = useState<number>(0);
   useMemo(()=> {
       async function loadTiles() {
-        console.log('reloading tiles');
-        const tileNames = (await storage.getAvailableTiles()).filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test(name));
-        const uniq = [... new Set(tileNames.map((name)=> name.replace(/\..*$/,'')))]
-        setTiles(uniq);
+        //console.log('reloading tiles');
+        //const tileNames = (await storage.getAvailableTiles()).filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test(name));
+        //const uniq = [... new Set(tileNames.map((name)=> name.replace(/\..*$/,'')))]
+        const tileNames = await props.peakyWorker.listTiles();
+        setTiles(tileNames);
       }
       loadTiles();
-    }, [storage, changeSet]);
+    }, [changeSet]);
 
   const currentTile = props.location? tileKey(props.location): "";
   
@@ -94,8 +96,7 @@ const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
   }
 
   const deleteOne = async (tile: string, update: boolean = true) => {
-    await storage.remove(tile + '.array.json');
-    await storage.remove(tile + '.hgt');
+    await props.peakyWorker.deleteTile(tile);
     if (update) {
       setChangeSet((n)=> n+1)
     }
