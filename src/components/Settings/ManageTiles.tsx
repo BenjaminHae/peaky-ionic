@@ -62,10 +62,6 @@ const ManageTiles: React.FC<ManageTilesProps> = (props: ManageTilesProps) => {
     }, [storage, changeSet]);
 
   const currentTile = props.location? tileKey(props.location): "";
-  //todo
-  // - multiselect
-  //   - show selected on map
-  // - show one on map
   
   const chooseSelected = (tile: string, event: CheckboxCustomEvent<{ checked: boolean }>) => {
     setSelected(
