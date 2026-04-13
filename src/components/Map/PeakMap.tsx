@@ -2,9 +2,9 @@ import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
 import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
-import { IonButton } from '@ionic/react';
-import { IonIcon } from '@ionic/react';
-import { navigateCircleOutline } from 'ionicons/icons';
+import { IonButton, IonItem, IonInput } from '@ionic/react';
+import { IonIcon, IonLabel } from '@ionic/react';
+import { navigateCircleOutline, cloudDownloadOutline } from 'ionicons/icons';
 import { Icon } from 'leaflet';
 import Peaky, { type PeakWithDistance } from '@benjaminhae/peaky';
 import { useEffect, useMemo, useState } from 'react';
@@ -85,9 +85,12 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
       />
       { selectLocation !== null &&
         <Popup position={[selectLocation.lat, selectLocation.lng]}>
-          <strong>Show peaks for this location?</strong> 
-          <p>{selectLocation.lat}, {selectLocation.lng}</p>
+          <strong>Show peaks for this location</strong> 
+          <p>
+          {selectLocation.lat}, {selectLocation.lng}
+          </p>
           <IonButton 
+            title="Show Peaks"
             onClick={()=>{
               const lat = selectLocation.lat
               const lng = selectLocation.lng
@@ -96,7 +99,21 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
               props.set_location(lat, lng);
             }}>
             <IonIcon icon={navigateCircleOutline}></IonIcon>
-          </IonButton>
+          </IonButton><br/>
+          <strong>Download data for location</strong> 
+          <IonItem>
+            <IonInput label="Include Distance" type="number" placeholder="10"></IonInput>
+            <IonLabel>km</IonLabel>
+            <IonButton
+              title="Download data for this location"
+              onClick={()=>{
+                const lat = selectLocation.lat
+                const lng = selectLocation.lng
+                // todo download location
+              }}>
+              <IonIcon icon={cloudDownloadOutline}></IonIcon>
+            </IonButton>
+          </IonItem>
         </Popup>
       }
       <CircleMarker center={[props.lat, props.lon]}>
