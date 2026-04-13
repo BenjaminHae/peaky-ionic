@@ -1,6 +1,5 @@
 import { GeoLocation, projected_height, PeakWithDistance, PeakyOptions } from '@benjaminhae/peaky';
 import { PeakyWorkerResponse, Dimensions, Status } from './peakyConnectorTypes';
-import SrtmStorage from '../capacitor_srtm_storage';
 
 //todo: send elevation
 export default class PeakyWorkerConnector {
@@ -12,6 +11,7 @@ export default class PeakyWorkerConnector {
   dimensions?: Dimensions;
   peaks?: Array<PeakWithDistance>;
   hasPeaks: boolean = false;
+  genericListener: Record<string, {resolve: (data: any) => void, reject: (e: any) => void}> = {};
   
   constructor() {
     this.worker = new Worker(new URL('./peaky.ts', import.meta.url), {
@@ -41,7 +41,13 @@ export default class PeakyWorkerConnector {
     else if (data.action == "fetch") {
       this.handleFetch(data.id, data.args);
     }
+    else if (data.action == "genericReturn") {
+      this.callGenericReturnListener(data.id, data.data);
+    }
     else if (data.action == "error") {
+      if ("id" in data) {
+        this.callGenericReturnListenerError(data.id, data);
+      }
       this.callErrorListener(data);
     }
   }
@@ -55,6 +61,18 @@ export default class PeakyWorkerConnector {
       .catch((result)=> {
         this.worker.postMessage({action: "fetch", id: id, state: "reject", result: result}, [result]);
       })
+  }
+
+  callGenericReturnListener(id: string, data: any) {
+    const callback = this.genericListener[id].resolve;
+    delete this.genericListener[id];
+    callback(data);
+  }
+
+  callGenericReturnListenerError(id: string, e: any) {
+    const callback = this.genericListener[id].reject;
+    delete this.genericListener[id];
+    callback(data);
   }
 
   callStatusListener(status: Status) {
@@ -90,6 +108,28 @@ export default class PeakyWorkerConnector {
     delete this.peaks;
     delete this.dimensions;
     this.worker.postMessage({action: "init", data: {location: location, options: options}});
+  }
+
+  genericSubscribe(id: string, resolve: (data: any) => void, reject: (e: any) => void) {
+    this.genericListener[id] = {resolve: resolve, reject: reject};
+  }
+
+  async listTiles(): Array<string> {
+    const id = Math.random().toString(36).slice(2);
+    const promise = new Promise<any>((resolve, reject) => {
+      this.genericSubscribe(id, resolve, reject);
+    })
+    this.worker.postMessage({action: "listTiles", id: id});
+    return promise;
+  }
+
+  async deleteTile(tile: string) {
+    const id = Math.random().toString(36).slice(2);
+    const promise = new Promise<any>((resolve, reject) => {
+      this.genericSubscribe(id, resolve, reject);
+    })
+    this.worker.postMessage({action: "deleteTile", tile: tile, id: id});
+    return promise;
   }
 
   getDimensions() {

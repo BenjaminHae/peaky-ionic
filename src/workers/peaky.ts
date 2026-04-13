@@ -133,13 +133,32 @@ class FakeResponseObject {
   }
 }
 
-const callFunctionErrorHandled = async (func: ()=> void) => {
+const callFunctionErrorHandled = async (func: ()=> void, id?: string) => {
   try {
     await func();
   } catch (e) {
-    self.postMessage({action: "error", error: e.name, msg: e.message});
+    self.postMessage({action: "error", error: e.name, msg: e.message, id:id});
     throw e;
   }
+}
+
+// file actions
+const deleteTile = async (id: string, tile: string) => {
+  callFunctionErrorHandled(async () => {
+    const storage = new SrtmStorage();
+    await storage.remove(tile + '.array.json');
+    await storage.remove(tile + '.hgt');
+    self.postMessage({action: "genericReturn", data: true, id: id});
+  }, id);
+}
+
+const listTiles = async (id: string) => {
+  callFunctionErrorHandled(async () => {
+    const storage = new SrtmStorage();
+    const tileNames = (await storage.getAvailableTiles()).filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test(name));
+    const uniq = [... new Set(tileNames.map((name)=> name.replace(/\..*$/,'')))]
+    self.postMessage({action: "genericReturn", data: uniq, id: id});
+  }, id);
 }
 
 self.onmessage = (data: MessageEvent<any>) => {
@@ -168,7 +187,12 @@ self.onmessage = (data: MessageEvent<any>) => {
     else if (data.data.state === "reject") {
       waiter[1](data.data.result);
     }
-
+  }
+  else if (data.data.action === "listTiles") {
+    listTiles(data.data.id);
+  }
+  else if (data.data.action === "deleteTile") {
+    deleteTile(data.data.id, data.data.tile);
   }
 };
 
