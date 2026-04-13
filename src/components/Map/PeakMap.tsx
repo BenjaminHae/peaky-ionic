@@ -1,7 +1,7 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
-import { TileLayer, useMap, useMapEvents, Marker, Popup, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
+import { TileLayer, useMap, useMapEvents, Marker, Popup, Circle, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
 import { IonButton, IonItem, IonInput } from '@ionic/react';
 import { IonIcon, IonLabel } from '@ionic/react';
 import { navigateCircleOutline, cloudDownloadOutline } from 'ionicons/icons';
@@ -39,6 +39,8 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
       setSelectLocation({lat: e.latlng.lat, lng: e.latlng.lng})
     }
   })
+
+  const [circleAroundLocation, setCircleAroundLocation] = useState<number>(0);
   
   const peakItems = useMemo(()=>{
     const icon = new Icon({iconUrl: markerIcon, iconSize: [25,41], iconAnchor: [12,41]});
@@ -64,7 +66,7 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
       const tiles = props.selectedTiles.map((tile, index) => {
         return <div key={index}>
           <Rectangle bounds={[[tile.northWest.lat, tile.northWest.lon], [tile.southEast.lat, tile.southEast.lon]]}>
-            <Tooltip direction="center" offset={[0.5, 0.5]} opacity={1} permanent onClick={()=>{console.log("hi")}}>
+            <Tooltip direction="center" offset={[0.5, 0.5]} opacity={1} permanent >
                     {tile.tile}
             </Tooltip>
           </Rectangle>
@@ -102,7 +104,13 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
           </IonButton><br/>
           <strong>Download data for location</strong> 
           <IonItem>
-            <IonInput label="Include Distance" type="number" placeholder="10"></IonInput>
+            <IonInput 
+              label="Include Distance" 
+              type="number" 
+              value={circleAroundLocation} 
+              /*ionChange={(e)=>{console.log(e);setCircleAroundLocation(parseInt(e.detail.value));}}*/
+            >
+            </IonInput>
             <IonLabel>km</IonLabel>
             <IonButton
               title="Download data for this location"
@@ -118,6 +126,10 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
       }
       <CircleMarker center={[props.lat, props.lon]}>
       </CircleMarker>
+      { selectLocation !== null && circleAroundLocation > 0 &&
+        <Circle center={[selectLocation.lat, selectLocation.lng]} radius={circleAroundLocation * 1000}>
+        </Circle>
+      }
       {peakItems}
       {tileRectangles}
     </>
