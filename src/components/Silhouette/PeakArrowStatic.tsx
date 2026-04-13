@@ -3,7 +3,7 @@ import { useTransformContext, useTransformEffect, useTransformInit,  } from "rea
 import { IonIcon } from '@ionic/react';
 import { useRef, useState, useEffect, useCallback } from "react";
 import { type GeoLocation, projected_height, type PeakWithDistance } from '@benjaminhae/peaky';
-import { useResize } from "../use-resize.hook";
+import { useResize } from "../../use-resize.hook";
 
 import Arrow from './arrow.svg?inline';
 

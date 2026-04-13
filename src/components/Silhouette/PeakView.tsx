@@ -4,23 +4,25 @@ import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useEffect }
 import { PluginListenerHandle } from '@capacitor/core';
 import { Motion } from '@capacitor/motion';
 import { type GeoLocation, projected_height, type PeakWithDistance } from '@benjaminhae/peaky';
-import SrtmStorage from '../capacitor_srtm_storage';
+import SrtmStorage from '../../capacitor_srtm_storage';
 import PeakLabel from './PeakLabel';
 import PeakArrow from './PeakArrow';
+import PeakArrowStatic from './PeakArrowStatic';
 import { IonButton } from '@ionic/react';
-import { type Dimensions } from '../workers/peakyConnectorTypes';
+import { type Dimensions } from '../../workers/peakyConnectorTypes';
 
 
 const MAGIC_CIRCLE_SCALE = 2;
 
 interface ContainerProps { 
   transformer: ReactZoomPanPinchRef;
-  location?: {coords: GeoLocation, elevation: number|null};
+  location: GeoLocation;
   canvasDrawer: (canvas: OffscreenCanvas, darkMode: boolean) => string;
   existingCanvasDrawer: (canvas: string, darkMode: boolean) => void;
   peaks: Array<PeakWithDistance>;
   dimensions: Dimensions;
   selectedPeak?: PeakWithDistance;
+  peakIteration: number;
 }
 export interface PeakViewRef {
   zoomToDirection: (direction: number, fast?: boolean) => void;
@@ -57,17 +59,18 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     if (props.transformer.current) {
       const { setTransform } = props.transformer.current;
       const scale = transformContext.transformState.scale;
-      let newPositionX = -dir/360 * width - offset 
-      if (newPositionX < 0) {
+      let newPositionX = -(dir % 360)/360 * width - offset 
+      while (newPositionX < 0) {
         newPositionX += width;
-      } else if (newPositionX > width) {
+      }
+      while (newPositionX > width) {
         newPositionX -= width;
       }
       setTransform(newPositionX * scale, transformContext.transformState.positionY, scale, fast ? 5 : 300);
     }
   };
   const writeOffset = (off: number) => {
-    setOffset(offset + off);
+    setOffset((offset)=>(offset + off) % width);
   }
   useImperativeHandle(ref, () => ({
     zoomToDirection: (dir: number, fast: boolean=true) => {
@@ -139,7 +142,9 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   }, [canvasRef3.current]);
   const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   useEffect(()=> {
+    console.log('try repainting canvas')
     if (canvasRef.current && offscreen) {
+      console.log('exists')
       const newId = props.canvasDrawer(offscreen, darkMode);
       if (newId !== "") {
         setOffscreenId(newId);
@@ -157,7 +162,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
       console.log(`setting canvas Scale to ${scale}`);
       setCanvasScale(scale);
     }
-  }, [offscreen]);
+  }, [offscreen, props.dimensions]);
   useEffect(()=> {
     if (offscreen2) {
       const newId = props.canvasDrawer(offscreen2, darkMode);
@@ -168,7 +173,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         props.existingCanvasDrawer(offscreenId2, darkMode);
       }
     }
-  }, [offscreen2]);
+  }, [offscreen2, props.dimensions]);
   useEffect(()=> {
     if (offscreen3) {
       const newId = props.canvasDrawer(offscreen3, darkMode);
@@ -179,7 +184,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
         props.existingCanvasDrawer(offscreenId3, darkMode);
       }
     }
-  }, [offscreen3]);
+  }, [offscreen3, props.dimensions]);
 
   const directions = ["N","O","S","W"].map((dir, index) => {
       return [-1,0,1].map((canvasId) => {
@@ -202,7 +207,17 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     });
   
   return (
-        <TransformComponent>
+        <>
+        { props.peaks.length > 0 && 
+          <PeakArrowStatic 
+            selectedPeak={ props.peaks[0] } 
+            canvasScale={ canvasScale }
+            centralElevation={props.dimensions.central_elevation} 
+          /> }
+        <TransformComponent
+          wrapperStyle={{width: "100%", heigth: "100%"}}
+          contentStyle={{width: "100%", heigth: "100%"}}
+          >
           <div className="fullSize" ref={containerRef}>
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
               <canvas className="canvas" ref={canvasRef2} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `-${canWidth*2}px`, top: '0px'}}/>
@@ -225,6 +240,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
             </div>
           </div>
         </TransformComponent>
+        </>
   );
 });
 

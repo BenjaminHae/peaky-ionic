@@ -4,8 +4,8 @@ import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, useTransfor
 import { useRef, useState, useEffect, useCallback } from "react";
 import { GeoLocation, type PeakWithDistance } from '@benjaminhae/peaky';
 import { Geolocation as GeoLocationService } from '@capacitor/geolocation';
-import compassHeading from '../compass_heading';
-import { Dimensions } from '../workers/peakyConnectorTypes';
+import compassHeading from '../../compass_heading';
+import { Dimensions } from '../../workers/peakyConnectorTypes';
 
 interface PeakZoomProps {
   dimensions: Dimensions;
@@ -13,6 +13,7 @@ interface PeakZoomProps {
   existingCanvasDrawer: (canvas: string, darkMode: boolean) => void;
   peaks: Array<PeakWithDistance>;
   selectedPeak?: PeakWithDistance;
+  location: GeoLocation;
 }
 
 const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
@@ -76,7 +77,8 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
           onPanningStart={movingStart} 
           onPinchingStart={movingStart}
           onPanningStop={movingEnd} 
-          onPinchingStop={movingEnd}>
+          onPinchingStop={movingEnd}
+        >
         <PeakView 
           transformer={transformComponentRef} 
           ref={peakViewRef} 
@@ -84,6 +86,7 @@ const PeakZoom: React.FC<PeakZoomProps> = (props: PeakZoomProps) => {
           canvasDrawer={props.canvasDrawer} 
           existingCanvasDrawer={props.existingCanvasDrawer} 
           peaks={props.peaks}
+          location={props.location}
           selectedPeak={props.selectedPeak} />
       </TransformWrapper>
     </div>

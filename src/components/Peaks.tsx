@@ -1,5 +1,5 @@
 import './Peaks.css';
-import PeakZoom from './PeakZoom';
+import PeakZoom from './Silhouette/PeakZoom';
 import PeakList from './PeakList';
 import PeakMapContainer from './PeakMapContainer';
 import ManageTiles from './Settings/ManageTiles';
