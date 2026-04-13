@@ -108,11 +108,12 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
               label="Include Distance" 
               type="number" 
               value={circleAroundLocation} 
-              /*ionChange={(e)=>{console.log(e);setCircleAroundLocation(parseInt(e.detail.value));}}*/
+              onIonChange={(e)=>{setCircleAroundLocation(parseInt(e.detail.value));}}
             >
             </IonInput>
             <IonLabel>km</IonLabel>
             <IonButton
+              disabled
               title="Download data for this location"
               onClick={()=>{
                 const lat = selectLocation.lat
