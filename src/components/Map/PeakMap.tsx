@@ -1,6 +1,7 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
+import { GeoLocation } from '@benjaminhae/peaky';
 import { TileLayer, useMap, useMapEvents, Marker, Popup, Circle, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
 import { IonButton, IonItem, IonInput } from '@ionic/react';
 import { IonIcon, IonLabel } from '@ionic/react';
@@ -21,7 +22,7 @@ export interface PeakMapProps {
   peak_selector: (peak: PeakWithDistance | null, display:'map'|'silhouette') => void;
   selectedPeak?: PeakWithDistance;
   set_location: (lat: number, lon: number) => void;
-  selectedTiles: Array<{tile:string, northWest:GeoLocation, southEast: GeoLocation}>;
+  selectedTiles: Array<{tile:string, northWest: GeoLocation, southEast: GeoLocation}>;
 }
 const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const map = useMap();
@@ -32,7 +33,7 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   useEffect(()=>{
     setTimeout(()=>{map.invalidateSize();}, 500);
   }, [map]);
-  const [selectLocation, setSelectLocation] = useState<{lat, lng: number}|null>(null);
+  const [selectLocation, setSelectLocation] = useState<{lat: number, lng: number}|null>(null);
   const map_events = useMapEvents({
     click(e) {
       console.log(e.latlng.lat, e.latlng.lng);
@@ -125,7 +126,7 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
           </IonItem>
         </Popup>
       }
-      <CircleMarker center={[props.lat, props.lon]}>
+      <CircleMarker center={[props.lat, props.lon]} radius={5} >
       </CircleMarker>
       { selectLocation !== null && circleAroundLocation > 0 &&
         <Circle center={[selectLocation.lat, selectLocation.lng]} radius={circleAroundLocation * 1000}>
