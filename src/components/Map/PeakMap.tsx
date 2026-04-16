@@ -3,9 +3,10 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
 import { GeoLocation } from '@benjaminhae/peaky';
 import { TileLayer, useMap, useMapEvents, Marker, Popup, Circle, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
-import { IonButton, IonItem, IonInput } from '@ionic/react';
+import { IonButton, IonItem, IonInput, IonCheckbox } from '@ionic/react';
 import { IonIcon, IonLabel } from '@ionic/react';
 import { navigateCircleOutline, cloudDownloadOutline } from 'ionicons/icons';
+import PeakyWorkerConnector from '../../workers/peakyWorkerConnector';
 import { Icon } from 'leaflet';
 import Peaky, { type PeakWithDistance } from '@benjaminhae/peaky';
 import { useEffect, useMemo, useState } from 'react';
@@ -22,6 +23,7 @@ export interface PeakMapProps {
   selectedPeak?: PeakWithDistance;
   set_location: (lat: number, lon: number) => void;
   selectedTiles: Array<{tile:string, northWest: GeoLocation, southEast: GeoLocation}>;
+  peakyWorker: PeakyWorkerConnector;
 }
 const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const map = useMap();
@@ -35,7 +37,6 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   const [selectLocation, setSelectLocation] = useState<{lat: number, lng: number}|null>(null);
   const map_events = useMapEvents({
     click(e) {
-      console.log(e.latlng.lat, e.latlng.lng);
       setSelectLocation({lat: e.latlng.lat, lng: e.latlng.lng})
     }
   })
@@ -67,7 +68,7 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
         return <div key={index}>
           <Rectangle bounds={[[tile.northWest.lat, tile.northWest.lon], [tile.southEast.lat, tile.southEast.lon]]}>
             <Tooltip direction="center" offset={[0.5, 0.5]} opacity={1} permanent >
-                    {tile.tile}
+               {tile.tile}
             </Tooltip>
           </Rectangle>
        </div>
@@ -113,12 +114,11 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
             </IonInput>
             <IonLabel>km</IonLabel>
             <IonButton
-              disabled
               title="Download data for this location"
               onClick={()=>{
                 const lat = selectLocation.lat
                 const lng = selectLocation.lng
-                // todo download location
+                props.peakyWorker.downloadArea(new GeoLocation(lat, lng), circleAroundLocation * 1000);
               }}>
               <IonIcon icon={cloudDownloadOutline}></IonIcon>
             </IonButton>

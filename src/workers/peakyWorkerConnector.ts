@@ -59,7 +59,11 @@ export default class PeakyWorkerConnector {
         this.worker.postMessage({action: "fetch", id: id, state: "resolve", result: response}, [response.ab]);
       })
       .catch((result)=> {
-        this.worker.postMessage({action: "fetch", id: id, state: "reject", result: result}, [result]);
+        try {
+          this.worker.postMessage({action: "fetch", id: id, state: "reject", result: result}, [result]);
+        } catch {
+          this.worker.postMessage({action: "fetch", id: id, state: "reject"});
+        }
       })
   }
 
@@ -72,7 +76,7 @@ export default class PeakyWorkerConnector {
   callGenericReturnListenerError(id: string, e: any) {
     const callback = this.genericListener[id].reject;
     delete this.genericListener[id];
-    callback(data);
+    callback(e);
   }
 
   callStatusListener(status: Status) {
@@ -129,6 +133,15 @@ export default class PeakyWorkerConnector {
       this.genericSubscribe(id, resolve, reject);
     })
     this.worker.postMessage({action: "deleteTile", tile: tile, id: id});
+    return promise;
+  }
+
+  async downloadArea(location: GeoLocation, distance: number) {
+    const id = Math.random().toString(36).slice(2);
+    const promise = new Promise<any>((resolve, reject) => {
+      this.genericSubscribe(id, resolve, reject);
+    })
+    this.worker.postMessage({action: "downloadArea", location: location, distance: distance, id: id});
     return promise;
   }
 

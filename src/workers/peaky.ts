@@ -66,6 +66,26 @@ const statusListener = (status: PeakyStatus) => {
   self.postMessage({ action: "status", status: status as WorkerStatus});
 }
 
+// distance in meters
+const downloadArea = (id: string, location: GeoLocation, distance: number) => {
+  callFunctionErrorHandled(async () => {
+    // add the usual calculation distance to the download distance
+    peaky = new Peaky(new SrtmStorage(), location, { max_distance: (distance + 50*1000) });
+    peaky.subscribeStatus(statusListener);
+    await peaky.init();
+    const status = {
+      state: "done",
+      state_no: 5,
+      state_max: 5,
+      sub: 0,
+      sub_no: 0,
+      sub_max: 0,
+    }
+    statusListener(status);
+    return true;
+  }, id);
+}
+
 const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) => {
   if (calculating_location && location.lat == calculating_location.lat && location.lon == calculating_location.lon) {
     if (calculating_elevation && options.elevation && options.elevation == calculating_elevation) {
@@ -136,7 +156,9 @@ class FakeResponseObject {
 const callFunctionErrorHandled = async (func: ()=> void, id?: string) => {
   try {
     const data = await func();
-    self.postMessage({action: "genericReturn", data: data, id: id});
+    if (id) {
+      self.postMessage({action: "genericReturn", data: data, id: id});
+    }
   } catch (e) {
     self.postMessage({action: "error", error: e.name, msg: e.message, id:id});
     throw e;
@@ -196,7 +218,7 @@ self.onmessage = (data: MessageEvent<any>) => {
     deleteTile(data.data.id, data.data.tile);
   }
   else if (data.data.action === "downloadArea") {
-    downloadArea(data.data.id, data.data.northWest, data.data.southEast);
+    downloadArea(data.data.id, data.data.location, data.data.distance);
   }
 };
 

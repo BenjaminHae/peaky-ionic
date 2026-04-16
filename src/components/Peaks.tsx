@@ -39,7 +39,17 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
   }; 
   const [presentAlert] = useIonAlert();
 
-  const peakyWorker = useMemo(() => new PeakyWorkerConnector(), [/*location*/]);
+  const peakyWorker = useMemo(() => {
+      const peakyWorker = new PeakyWorkerConnector();
+      peakyWorker.subscribeStatus((s) => setStatus(s));
+      peakyWorker.subscribeError((name, msg) => presentAlert({
+        header: 'Fehler',
+        subHeader: name,
+        message: msg,
+        buttons: ['Ok'],
+      }));
+      return peakyWorker;
+    }, [/*location*/]);
 
   const mutex = useRef(new Mutex());
  
@@ -53,13 +63,6 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
         if (Capacitor.getPlatform() == 'web') {
           (options as any).provider = '/cache/{lat}{lng}.SRTMGL3S.hgt.zip';
         }
-        peakyWorker.subscribeStatus((s) => setStatus(s));
-        peakyWorker.subscribeError((name, msg) => presentAlert({
-          header: 'Fehler',
-          subHeader: name,
-          message: msg,
-          buttons: ['Ok'],
-        }));
         await peakyWorker.init(location.coords, options);
         const _dimensions = await peakyWorker.getDimensions();
         setDimensions(_dimensions);
@@ -173,6 +176,7 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
             peak_selector={peak_selector}
             set_location={(lat, lon: number) => {console.log(lat, lon); setLocation({coords: new GeoLocation(lat, lon)})}}
             selectedTiles={selectedTiles}
+            peakyWorker={peakyWorker}
           /> 
         }
         { selectedArea == 'settings' &&
