@@ -135,7 +135,8 @@ class FakeResponseObject {
 
 const callFunctionErrorHandled = async (func: ()=> void, id?: string) => {
   try {
-    await func();
+    const data = await func();
+    self.postMessage({action: "genericReturn", data: data, id: id});
   } catch (e) {
     self.postMessage({action: "error", error: e.name, msg: e.message, id:id});
     throw e;
@@ -148,7 +149,7 @@ const deleteTile = async (id: string, tile: string) => {
     const storage = new SrtmStorage();
     await storage.remove(tile + '.array.json');
     await storage.remove(tile + '.hgt');
-    self.postMessage({action: "genericReturn", data: true, id: id});
+    return true;
   }, id);
 }
 
@@ -157,7 +158,7 @@ const listTiles = async (id: string) => {
     const storage = new SrtmStorage();
     const tileNames = (await storage.getAvailableTiles()).filter((name)=>/^[NS][0-9]{2}[EW][0-9]{3}\.(hgt|array\.json)$/.test(name));
     const uniq = [... new Set(tileNames.map((name)=> name.replace(/\..*$/,'')))]
-    self.postMessage({action: "genericReturn", data: uniq, id: id});
+    return uniq;
   }, id);
 }
 
@@ -193,6 +194,9 @@ self.onmessage = (data: MessageEvent<any>) => {
   }
   else if (data.data.action === "deleteTile") {
     deleteTile(data.data.id, data.data.tile);
+  }
+  else if (data.data.action === "downloadArea") {
+    downloadArea(data.data.id, data.data.northWest, data.data.southEast);
   }
 };
 
