@@ -169,8 +169,24 @@ const callFunctionErrorHandled = async (func: ()=> void, id?: string) => {
 const deleteTile = async (id: string, tile: string) => {
   callFunctionErrorHandled(async () => {
     const storage = new SrtmStorage();
-    await storage.remove(tile + '.array.json');
-    await storage.remove(tile + '.hgt');
+    let filename = tile + '.array.json'
+    try {
+      await storage.remove(filename);
+    } catch(e) {
+      if (e.message !== "File does not exist.") { 
+        e.message = e.message + " filename: " + filename;
+        throw e;
+      }
+    }
+    filename = tile + '.hgt'
+    try {
+      await storage.remove(filename);
+    } catch(e) {
+      if (e.message !== "File does not exist.") { 
+        e.message = e.message + " filename: " + filename;
+        throw e;
+      }
+    }
     return true;
   }, id);
 }
