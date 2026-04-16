@@ -79,15 +79,11 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
     }
     return <></>
   }, [props.selectedTiles]);
-
-  return (
-    <>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      { selectLocation !== null &&
-        <Popup position={[selectLocation.lat, selectLocation.lng]}>
+  
+  const positionPopup = useMemo(()=>{
+    if (selectLocation === null)
+      return
+    return <Popup position={[selectLocation.lat, selectLocation.lng]}>
           <strong>Show peaks for this location</strong> 
           <p>
           {selectLocation.lat}, {selectLocation.lng}
@@ -124,6 +120,16 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
             </IonButton>
           </IonItem>
         </Popup>
+  }, [selectLocation])
+
+  return (
+    <>
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      { selectLocation !== null &&
+        positionPopup
       }
       <CircleMarker center={[props.lat, props.lon]} radius={5} >
       </CircleMarker>
