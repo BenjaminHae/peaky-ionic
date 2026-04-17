@@ -1,6 +1,11 @@
 import './PeakMap.css';
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIconSelected from "./marker-icon-black.png";
+import markerIconGold from "./marker-icon-gold.png";
+import markerIconGreen from "./marker-icon-green.png";
+import markerIconGrey from "./marker-icon-grey.png";
+import markerIconRed from "./marker-icon-red.png";
+import markerIconYellow from "./marker-icon-yellow.png";
 import { GeoLocation } from '@benjaminhae/peaky';
 import { TileLayer, useMap, useMapEvents, Marker, Popup, Circle, CircleMarker, Rectangle, Tooltip, FeatureGroup } from 'react-leaflet'
 import { IonButton, IonItem, IonInput, IonCheckbox } from '@ionic/react';
@@ -14,6 +19,7 @@ import {
   useIonViewDidEnter,
 } from '@ionic/react';
 
+const clusterColoredMarker = [markerIconGold, markerIconGreen, markerIconGrey, markerIconRed, markerIconYellow];
 
 export interface PeakMapProps { 
   lat: number;
@@ -45,10 +51,11 @@ const PeakMap: React.FC<PeakMapProps> = (props:PeakMapProps) => {
   
   const peakItems = useMemo(()=>{
     const icon = new Icon({iconUrl: markerIcon, iconSize: [25,41], iconAnchor: [12,41]});
+    const clusterIcons = clusterColoredMarker.map( (i) => new Icon({iconUrl: i, iconSize: [25,41], iconAnchor: [12,41]}) );
     const selectedIcon = new Icon({iconUrl: markerIconSelected, iconSize: [25,41], iconAnchor: [12,41]});
     return props.peaks.map(
      (peak, index) => 
-        <Marker position={[peak.location.lat, peak.location.lon]} key={`peak-${index}`} icon={props.selectedPeak == peak ? selectedIcon : icon}>
+        <Marker position={[peak.location.lat, peak.location.lon]} key={`peak-${index}`} icon={props.selectedPeak == peak ? selectedIcon : (peak.cluster === 0 ? icon : clusterIcons[(peak.cluster - 1) % clusterIcons.length])}>
           <Popup>
            <strong>{peak.name}
 </strong> <p>{peak.elevation.toFixed(0)} m, Entfernung: {(peak.distance/1000).toFixed(1)} km</p>
