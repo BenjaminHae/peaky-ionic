@@ -1,15 +1,20 @@
 import { GeoLocation, projected_height, PeakWithDistance, PeakyOptions } from '@benjaminhae/peaky';
 import { PeakyWorkerResponse, Dimensions, Status } from './peakyConnectorTypes';
+import { jDBSCAN } from './jDBScan';
+
+export class PeakWithDistanceAndCluster extends PeakWithDistance{
+  cluster: number
+}
 
 //todo: send elevation
 export default class PeakyWorkerConnector {
   worker: Worker;
-  peakWaiter: Array<(peaks: Array<PeakWithDistance>) => void> = [];
+  peakWaiter: Array<(peaks: Array<PeakWithDistanceAndCluster>) => void> = [];
   ridgeWaiter: Array<(dim: Dimensions) => void> = [];
   statusListener: Array<(status: Status) => void> = [];
   errorListener: Array<(name: string, msg: string) => void> = [];
   dimensions?: Dimensions;
-  peaks?: Array<PeakWithDistance>;
+  peaks?: Array<PeakWithDistanceAndCluster>;
   hasPeaks: boolean = false;
   genericListener: Record<string, {resolve: (data: any) => void, reject: (e: any) => void}> = {};
   
@@ -20,6 +25,7 @@ export default class PeakyWorkerConnector {
     this.worker.onmessage = (data) => this.messageHandler(data);
     this.worker.onerror = (err) => console.log(err);
   }
+
   messageHandler(parms: MessageEvent/*{data: { data: PeakyWorkerResponse }}*/) {
     const data = parms.data;
     if (data.action == "ridges") {
@@ -169,11 +175,11 @@ export default class PeakyWorkerConnector {
     this.worker.postMessage({action: "drawexisting", id:id, darkMode: darkMode});
   }
 
-  getPeaks(): Promise<Array<PeakWithDistance>> {
+  getPeaks(): Promise<Array<PeakWithDistanceAndCluster>> {
     if (this.hasPeaks && this.peaks) {
       return Promise.resolve(this.peaks);
     }
-    const promise = new Promise<Array<PeakWithDistance>>((resolve) => {
+    const promise = new Promise<Array<PeakWithDistanceAndCluster>>((resolve) => {
       this.peakWaiter.push(resolve);
     })
     this.worker.postMessage({action: "peaks"});

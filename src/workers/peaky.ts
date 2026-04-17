@@ -2,6 +2,7 @@
 import { type PeakyWorkerMessage, type Dimensions, type Status as WorkerStatus } from './peakyConnectorTypes';
 import Peaky, { GeoLocation, type PeakyOptions, StatusMap, type Status as PeakyStatus } from '@benjaminhae/peaky';
 import SrtmStorage from '../capacitor_srtm_storage';
+import { jDBSCAN } from './jDBScan';
 
 const self = globalThis as unknown as DedicatedWorkerGlobalScope;
 
@@ -120,6 +121,49 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   }
 }
 
+const clusterPeaks = (peaks: Array<any>): Array<any> => {
+    const data = peaks.map((peak) => {
+      return { location: {
+        accuracy: 1,
+        latitude: peak.location.lat,
+        longitude:peak.location.lon,
+      } }
+    });
+    const gps_point_data = [
+  	{
+  		location: {
+  			accuracy: 30,
+  			latitude: 55.7858667,
+  			longitude: 12.5233995
+  		}
+  	},
+  	{
+  		location: {
+  			accuracy: 10,
+  			latitude: 45.4238667,
+  			longitude: 12.5233995
+  		}
+  	},
+  	{
+  		location: {
+  			accuracy: 5,
+  			latitude: 25.3438667,
+  			longitude: 11.6533995
+  		}
+  	}
+    ];
+    // Configure a DBSCAN instance.
+    const clustering = jDBSCAN()
+    	.eps(1)
+    	.minPts(1)
+    	.distance('HAVERSINE')
+    	.data(data)();
+    clustering.forEach((element, index) => {
+      peaks[index].cluster = element;
+    });
+}
+
+
 const doPeaksCalculation = async () => {
   if (peaky) {
     if (peaky.peaks.length > 0 || started_calculating_peaks ) {
@@ -132,6 +176,7 @@ const doPeaksCalculation = async () => {
     started_calculating_peaks = true;
     const time = [performance.now()];
     await peaky.findPeaks();
+    clusterPeaks(peaky.peaks);
     finished_calculating_peaks = true;
     self.postMessage({action: "peaks", peaks: peaky.peaks});
     time.push(performance.now());
