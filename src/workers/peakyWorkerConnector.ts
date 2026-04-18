@@ -3,7 +3,8 @@ import { PeakyWorkerResponse, Dimensions, Status } from './peakyConnectorTypes';
 import { jDBSCAN } from './jDBScan';
 
 export class PeakWithDistanceAndCluster extends PeakWithDistance{
-  cluster: number
+  cluster: number;
+  heighestInCluster: boolean;
 }
 
 //todo: send elevation

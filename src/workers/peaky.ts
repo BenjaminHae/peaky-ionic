@@ -121,7 +121,7 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   }
 }
 
-const clusterPeaks = (peaks: Array<any>): Array<any> => {
+const clusterPeaks = (peaks: Array<any>): void => {
     const data = peaks.map((peak) => {
       return { location: {
         accuracy: 1,
@@ -129,29 +129,6 @@ const clusterPeaks = (peaks: Array<any>): Array<any> => {
         longitude:peak.location.lon,
       } }
     });
-    const gps_point_data = [
-  	{
-  		location: {
-  			accuracy: 30,
-  			latitude: 55.7858667,
-  			longitude: 12.5233995
-  		}
-  	},
-  	{
-  		location: {
-  			accuracy: 10,
-  			latitude: 45.4238667,
-  			longitude: 12.5233995
-  		}
-  	},
-  	{
-  		location: {
-  			accuracy: 5,
-  			latitude: 25.3438667,
-  			longitude: 11.6533995
-  		}
-  	}
-    ];
     // Configure a DBSCAN instance.
     const clustering = jDBSCAN()
     	.eps(1)
@@ -160,6 +137,22 @@ const clusterPeaks = (peaks: Array<any>): Array<any> => {
     	.data(data)();
     clustering.forEach((element, index) => {
       peaks[index].cluster = element;
+    });
+    const cluster_count = Math.max(...clustering);
+    console.log(cluster_count);
+    
+    const cluster_heights = [... Array(cluster_count).keys()].map(
+      (element, idx) => {
+        // cluster 0 contains single peaks
+        if (idx === 0) {
+          return 0
+        }
+        const peaks_in_cluster = peaks.filter((peak) => peak.cluster === idx);
+        const heights = peaks_in_cluster.map((peak)=>peak.elevation )
+        return Math.max(...heights)
+      });
+    peaks.forEach((peak, index) => {
+      peak.heighestInCluster = peak.cluster === 0 || peak.elevation >= cluster_heights[peak.cluster];
     });
 }
 
