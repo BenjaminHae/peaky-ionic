@@ -10,7 +10,7 @@
 .peakStroke {
   border-left: 1px solid light-dark(black, white);
   height: 2em;
-  min-width: 0px;
+  min-width: 1em;
 }
 .labelContainer {
 }

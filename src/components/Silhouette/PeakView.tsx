@@ -109,7 +109,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
              transform:`scale(${(1/canvasScale).toFixed(2)})`, 
              transformOrigin:"bottom left"
            }}>
-           <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
+           <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel showByDefault={peak.heighestInCluster} name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
          </div>
          )
        )
@@ -215,8 +215,8 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
             centralElevation={props.dimensions.central_elevation} 
           /> }
         <TransformComponent
-          wrapperStyle={{width: "100%", heigth: "100%"}}
-          contentStyle={{width: "100%", heigth: "100%"}}
+          wrapperStyle={{width: "100%", height: "100%"}}
+          contentStyle={{width: "100%", height: "100%"}}
           >
           <div className="fullSize" ref={containerRef}>
             <div style={{transformOrigin: '0 0', transform:`scale(${canvasScale.toFixed(2)})`, position: "relative"}}>
