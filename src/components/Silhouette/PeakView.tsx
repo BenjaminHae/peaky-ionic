@@ -107,9 +107,10 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
              left: (canvasId * canWidth + peak.direction) * MAGIC_CIRCLE_SCALE, 
              bottom: projected_height(props.dimensions.central_elevation, peak.distance, peak.elevation, 0) - props.dimensions.min_projected_height, 
              transform:`scale(${(1/canvasScale).toFixed(2)})`, 
-             transformOrigin:"bottom left"
+             transformOrigin:"bottom left",
+             zIndex: peak.direction
            }}>
-           <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel showByDefault={peak.heighestInCluster} name={peak.name} elevation={peak.elevation.toFixed(0)}/></KeepScale>
+           <KeepScale style={{transformOrigin:"bottom left"}}><PeakLabel showByDefault={peak.heighestInCluster} name={peak.name} elevation={peak.elevation.toFixed(0)} /></KeepScale>
          </div>
          )
        )
