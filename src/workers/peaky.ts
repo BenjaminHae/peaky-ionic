@@ -121,6 +121,37 @@ const doRidgeCalculation = async (location: GeoLocation, options: PeakyOptions) 
   }
 }
 
+const haversine_distance = (point1, point2) => {
+  const R = 6371;
+  const precision = 4; // default 4 sig figs reflects typical 0.3% accuracy of spherical model
+  const lat1 = (point1.location.latitude * Math.PI) / 180;
+  const lon1 = (point1.location.longitude * Math.PI) / 180;
+  const lat2 = (point2.location.latitude * Math.PI) / 180;
+  const lon2 = (point2.location.longitude * Math.PI) / 180;
+  const dLat = lat2 - lat1;
+  const dLon = lon2 - lon1;
+  
+  const a =
+  	Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  	Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c;
+  
+  return d.toPrecision(precision); 
+}
+
+const distanceFunctionFactory = (current_location: any) => {
+  return (p1, p2: any) => {
+    const distance_current = Math.min(
+      haversine_distance(current_location, p1),
+      haversine_distance(current_location, p2)
+    );
+    console.log(distance_current);
+    return (1/Math.sqrt(distance_current)) * haversine_distance(p1, p2)
+  }
+}
+
 const clusterPeaks = (peaks: Array<any>): void => {
     const data = peaks.map((peak) => {
       return { location: {
@@ -133,7 +164,8 @@ const clusterPeaks = (peaks: Array<any>): void => {
     const clustering = jDBSCAN()
     	.eps(1)
     	.minPts(1)
-    	.distance('HAVERSINE')
+    	//.distance('HAVERSINE')
+    	.distance(distanceFunctionFactory({location: {latitude: calculating_location.lat, longitude: calculating_location.lon}}))
     	.data(data)();
     clustering.forEach((element, index) => {
       peaks[index].cluster = element;
