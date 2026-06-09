@@ -57,7 +57,9 @@ const Peaks: React.FC<PeaksProps> = (props: PeaksProps) => {
    () => {
      const callInit = async () => {
       if (location) {
-        const options = {};
+        const options = {
+          circle_precision: 360 * 20
+          };
         if (location.elevation !== null) 
           (options as any).elevation = location.elevation;
         if (Capacitor.getPlatform() == 'web') {
