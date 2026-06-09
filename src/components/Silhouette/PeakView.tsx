@@ -96,6 +96,76 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
   const canHeight = props.dimensions.max_projected_height - props.dimensions.min_projected_height// + 800;//800 is magic border constant, für Gipfel
   const canWidth = props.dimensions.circle_precision;
 
+  const [regionData, setRegionData] = useState(undefined);
+  useEffect(() => {
+    load()
+    async function load() {
+      const response = await fetch("/regions.json");
+      const file = await response.json();
+      console.log(file);
+      setRegionData(file) // this is optional
+    }
+  },[])
+
+  const regions = useMemo(()=>{
+        const regionIds = [...new Set(props.peaks.map(r=>r.region))]
+        const regionInfo = regionIds.map(r=> {
+          const regionPeaks = props.peaks
+            .filter(p=>p.region==r)
+            .sort((p1,p2)=>p1.direction-p2.direction);
+          return regionPeaks.reduce(
+              (acc, val, ind, arr) => {
+                let prev_idx;
+                let distance = 0;
+                if (ind > 0) {
+                  prev_idx = ind - 1;
+                }
+                else {
+                  prev_idx = arr.length - 1;
+                  distance = canWidth;
+                }
+                distance = distance + val.direction - arr[prev_idx].direction
+ 
+		if (distance > acc.max_distance) {
+                  // left_item is the most left peak of the region, the distance however is that of the empty area!
+                  acc.right_item = {direction: arr[prev_idx].direction, idx: prev_idx}
+                  acc.left_item = {direction: val.direction, idx: ind}
+                  acc.max_distance = distance
+                }
+                return acc;
+              },
+              {left_item:undefined, right_item:undefined, max_distance:0, region: r, peaks: regionPeaks}
+            )
+          }
+        );
+        return regionInfo.filter(r => (r.region != 0 && r.peaks.length > 1)).map((region) => 
+            <div key={`region-${region}`} style={{
+                   position: "absolute",
+                   bottom: "0em", 
+                   minHeight: "1em",
+                   left: region.left_item.direction * MAGIC_CIRCLE_SCALE,
+                   minWidth: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE
+               }}>
+               <div style={{
+                 width: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE,
+                 borderTop: `0.5em solid light-dark(black, white)`
+               }}>
+               </div>
+               <KeepScale style={{transformOrigin:"top left", width: "100%"}}>
+                 <div style={{width:"100%",
+                   textAlign: "left",
+                   font: "3em serif"
+                   }}>
+                   {regionData? regionData[region.region] : region.region}
+                 </div>
+               </KeepScale>
+            </div>
+        );
+      }
+      /*console.log(regionInfo);
+      return regionInfo;*/
+   , [props.peaks, props.dimensions, canvasScale, regionData]);
+
   const peakItems = useMemo(()=>{
     const minHeight = props.dimensions.min_projected_height;
     return props.peaks.map(
@@ -225,6 +295,7 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
               <canvas className="canvas" ref={canvasRef} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`}}/>
               <canvas className="canvas" ref={canvasRef3} height={canHeight} width={canWidth} style={{transformOrigin: '0 0', transform:`scaleX(${MAGIC_CIRCLE_SCALE})`, position: "absolute", left: `${canWidth*2}px`, top: '0px'}}/>
               {directions}
+              {regions}
               {peakItems}
               { props.selectedPeak && 
                 <PeakArrow 
