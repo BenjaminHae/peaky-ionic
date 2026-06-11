@@ -102,13 +102,12 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
     async function load() {
       const response = await fetch("/regions.json");
       const file = await response.json();
-      console.log(file);
       setRegionData(file) // this is optional
     }
   },[])
 
   const regions = useMemo(()=>{
-        const regionIds = [...new Set(props.peaks.map(r=>r.region))]
+        const regionIds = [...new Set(props.peaks.map(r=>r.region).filter(r=>(r !== null && r !== undefined && r !== 0)))]
         const regionInfo = regionIds.map(r=> {
           const regionPeaks = props.peaks
             .filter(p=>p.region==r)
@@ -138,32 +137,31 @@ const PeakView: React.FC<ContainerProps> = forwardRef<PeakViewRef, ContainerProp
             )
           }
         );
-        return regionInfo.filter(r => (r.region != 0 && r.peaks.length > 1)).map((region) => 
-            <div key={`region-${region}`} style={{
+        return regionInfo.filter(r => (r.region != 0 && r.region && r.peaks.length > 1)).map((region) => [-1,0,1].map(
+            (canvasId, cIndex) => 
+            <div key={`region-${region}-${cIndex}`} style={{
                    position: "absolute",
                    bottom: "0em", 
-                   minHeight: "1em",
-                   left: region.left_item.direction * MAGIC_CIRCLE_SCALE,
-                   minWidth: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE
+                   height: "1em",
+                   left: (canvasId * canWidth + region.left_item.direction) * MAGIC_CIRCLE_SCALE,
+                   minWidth: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE + (region.right_item.direction > region.left_item.direction ? 0 : canWidth)
                }}>
                <div style={{
-                 width: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE,
+                 width: (region.right_item.direction - region.left_item.direction) * MAGIC_CIRCLE_SCALE + (region.right_item.direction > region.left_item.direction ? 0 : canWidth),
                  borderTop: `0.5em solid light-dark(black, white)`
                }}>
                </div>
                <KeepScale style={{transformOrigin:"top left", width: "100%"}}>
                  <div style={{width:"100%",
                    textAlign: "left",
-                   font: "3em serif"
+                   font: "7em serif"
                    }}>
                    {regionData? regionData[region.region] : region.region}
                  </div>
                </KeepScale>
             </div>
-        );
+        ));
       }
-      /*console.log(regionInfo);
-      return regionInfo;*/
    , [props.peaks, props.dimensions, canvasScale, regionData]);
 
   const peakItems = useMemo(()=>{
