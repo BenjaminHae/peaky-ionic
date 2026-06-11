@@ -44,16 +44,32 @@ const peakSorter = (sortingMethod:string) => {
 
 const PeakList: React.FC<PeakListProps> = (props:PeakListProps) => {
   const [sortingMethod, setSortingMethod] = useState<'name'|'elevation'>('name');
+  const [regionData, setRegionData] = useState(undefined);
+  useEffect(() => {
+    load()
+    async function load() {
+      const response = await fetch("/regions.json");
+      const file = await response.json();
+      setRegionData(file) // this is optional
+    }
+  },[])
   const regions = [...new Set(props.peaks.map(p=>p.region))]
   console.log(regions)
-  const peakItems = regions.map( (r) => 
+  const regionPeakItems = regions.map( (r) => 
       <IonItemGroup>
-        <IonItemDivider>
-          <IonLabel>{r}</IonLabel>
-        </IonItemDivider>
+        {r !== null && r !== undefined &&
+          <IonItemDivider>
+            <IonLabel>{regionData? regionData[r] : r}</IonLabel>
+          </IonItemDivider>
+        }
 	{props.peaks.filter(p=> p.region == r).sort(peakSorter(sortingMethod)).map(peakItemFromPeak)}
       </IonItemGroup>
   )
+  const peakItems = <> 
+    <IonItemGroup>
+      {props.peaks.filter(p=> !("region" in p) ).sort(peakSorter(sortingMethod)).map(peakItemFromPeak)}
+    </IonItemGroup>
+    {regionPeakItems}</>
   //const peakItems = props.peaks.sort(peakSorter).map(peakItemFromPeak);
 
   return (
